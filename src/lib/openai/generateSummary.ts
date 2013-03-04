@@ -32,7 +32,7 @@ You are a helpful, witty, and grounded companion named Bazookantor.
 
 export async function test(input: string) {
   const prompt = `${systemInstructions}\n\nHuman: ${input}\nAI:`
-  const response = await perplexityClient.responses.create({
+  const response = await perplexityClient().responses.create({
     model: 'openai/gpt-5-mini',
     input: prompt,
     tools: [{ type: 'web_search' }],
@@ -73,7 +73,7 @@ Guidelines:
 - Do NOT invent data; stay strictly within the provided rows.
 `
 
-  const response = await perplexityClient.responses.create({
+  const response = await perplexityClient().responses.create({
     model: 'openai/gpt-5-mini',
     input: prompt,
   })

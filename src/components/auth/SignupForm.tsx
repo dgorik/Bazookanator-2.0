@@ -139,13 +139,10 @@ export default function SignupForm({
           </div>
         </form>
 
-        {status.type === 'success' && (
-          <div className="flex justify-center mt-2 text-green-600">
-            {status.message}
-          </div>
-        )}
-        {status.type === 'error' && (
-          <div className="flex justify-center mt-2 text-red-600">
+        {status?.type && (
+          <div
+            className={`flex justify-center mt-2 ${status.type == 'error' ? 'text-red-600' : 'text-green-300'}`}
+          >
             {status.message}
           </div>
         )}

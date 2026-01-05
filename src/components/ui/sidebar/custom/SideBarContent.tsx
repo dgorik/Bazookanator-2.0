@@ -15,7 +15,7 @@ import {
 // Menu items array
 const items = [
   {
-    title: 'Overview',
+    title: 'OverView',
     url: '/analytics',
     icon: Home,
   },

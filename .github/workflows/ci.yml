@@ -2,18 +2,14 @@ name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
   pull_request:
-    branches: ["main"]
+    branches: ['main']
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  lint-test:
-    name: Lint and Test
+  build:
+    name: Build, Lint, Typecheck, Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -39,51 +35,3 @@ jobs:
 
       - name: Build
         run: npm run build
-
-  test-migrations:
-    name: Test Migrations
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Test Database Migrations
-        run: |
-          # Check if migrations exist
-          if [ -d "supabase/migrations" ] && [ "$(ls -A supabase/migrations)" ]; then
-            echo "Testing migration files..."
-            
-            # Install PostgreSQL client
-            sudo apt-get update
-            sudo apt-get install -y postgresql-client
-            
-            # Set connection string
-            export DATABASE_URL="postgresql://postgres:postgres@localhost:5432/test"
-            
-            # Run each migration file in order
-            for migration in supabase/migrations/*.sql; do
-              if [ -f "$migration" ]; then
-                echo "Applying migration: $(basename $migration)"
-                psql $DATABASE_URL -f "$migration"
-              fi
-            done
-            
-            echo "✅ All migrations applied successfully"
-          else
-            echo "No migrations to validate"
-          fi

@@ -14,22 +14,6 @@ jobs:
       issues: write
       pull-requests: write
 
-name: CD
-
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
-jobs:
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,7 +25,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -51,8 +35,10 @@ jobs:
         run: |
           if [ -d "supabase/migrations" ] && [ "$(ls -A supabase/migrations)" ]; then
             echo "has-migrations=true" >> $GITHUB_OUTPUT
+            echo "📋 Found migration files - will check if any are new"
           else
             echo "has-migrations=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No migrations found - skipping Supabase steps"
           fi
 
       - name: Setup Supabase CLI
@@ -67,7 +53,18 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
         run: |
+          echo "🔗 Linking to Supabase project..."
+          echo "🔍 Debug: SUPABASE_PROJECT_ID is: ${SUPABASE_PROJECT_ID:+set}"
+          echo "🔍 Debug: SUPABASE_ACCESS_TOKEN is: ${SUPABASE_ACCESS_TOKEN:+set}"
+
+          if [ -z "$SUPABASE_PROJECT_ID" ]; then
+            echo "❌ Error: SUPABASE_PROJECT_ID is not set!"
+            echo "Please ensure the SUPABASE_PROJECT_ID secret is configured in your repository settings."
+            exit 1
+          fi
+
           supabase link --project-ref "$SUPABASE_PROJECT_ID" --password "$SUPABASE_DB_PASSWORD"
 
       - name: Apply database migrations
@@ -76,7 +73,22 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
-          supabase db push --password "$SUPABASE_DB_PASSWORD"
+          echo "📋 Checking migration status..."
+          echo "🔍 Debug: Current working directory: $(pwd)"
+          echo "🔍 Debug: Supabase directory contents:"
+          ls -la supabase/ || echo "No supabase directory found"
+
+          supabase migration list --password "$SUPABASE_DB_PASSWORD" || echo "⚠️ Failed to list migrations, but continuing..."
+
+          echo "🚀 Applying database migrations..."
+          supabase db push --debug --password "$SUPABASE_DB_PASSWORD" || {
+            echo "❌ Migration push failed!"
+            echo "🔍 Debug: Checking Supabase CLI version..."
+            supabase --version
+            exit 1
+          }
+
+          echo "✅ Migration deployment complete"
 
       - name: Generate TypeScript types
         if: steps.check-migrations.outputs.has-migrations == 'true'
@@ -84,7 +96,40 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
+          echo "🔍 Generating TypeScript types from database schema..."
           supabase gen types typescript --linked --schema public > lib/supabase/types.ts
+
+          # Check if types were generated successfully
+          if [ -s lib/supabase/types.ts ]; then
+            echo "✅ TypeScript types generated successfully"
+            
+            # Check if the generated file actually differs from what's in git
+            if ! git diff --quiet HEAD -- lib/supabase/types.ts; then
+              echo "📝 Changes detected in types file, committing..."
+              
+              # Commit the updated types
+              git config --global user.name "github-actions[bot]"
+              git config --global user.email "github-actions[bot]@users.noreply.github.com"
+              
+              git add lib/supabase/types.ts
+              git commit --no-verify -m "chore: update database types [skip ci]" -m "🤖 Generated from database schema after migration"
+              
+              # Push using the PAT to bypass branch protection
+              git push https://x-access-token:${{ secrets.RELEASE_PAT }}@github.com/${{ github.repository }}.git HEAD:main
+              echo "✅ Updated types committed to repository"
+            else
+              echo "ℹ️ No changes to types detected - continuing workflow"
+            fi
+          else
+            echo "❌ Failed to generate TypeScript types"
+            exit 1
+          fi
+
+      - name: Semantic Release
+        id: semantic
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
+        run: npx semantic-release
 
       - name: Build application
         run: npm run build
@@ -98,5 +143,18 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
+          # Install Vercel CLI
           npm install -g vercel
-          vercel deploy --prod --token=$VERCEL_TOKEN
+
+          # Pull Vercel environment (production)
+          vercel pull --yes --environment=production --token=$VERCEL_TOKEN
+
+          # Build for production
+          vercel build --prod --token=$VERCEL_TOKEN
+
+          # Deploy the built application
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN)
+          echo "🚀 Deployed to: $DEPLOYMENT_URL"
+
+          # Set output for other steps if needed
+          echo "deployment-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT

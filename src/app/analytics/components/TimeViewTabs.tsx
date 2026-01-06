@@ -1,6 +1,6 @@
 'use client'
 
-import { cn } from '@/src/lib/utils'
+import { cn } from '@/src/utils/utils'
 import type { TimeView } from '@/src/lib/fetcher/fetchers'
 
 interface TimeViewTabsProps {

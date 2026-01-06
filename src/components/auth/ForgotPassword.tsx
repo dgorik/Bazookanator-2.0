@@ -40,8 +40,10 @@ export default function ForgotPasswordForm({}: React.ComponentPropsWithoutRef<'d
         type: 'success',
         message: 'If the email exists, a reset link has been sent.',
       })
-    } catch (err: any) {
-      setStatus({ type: 'error', message: err.message })
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'An unexpected error occurred'
+      setStatus({ type: 'error', message })
     }
   }
   return (

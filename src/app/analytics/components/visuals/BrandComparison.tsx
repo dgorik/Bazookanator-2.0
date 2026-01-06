@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { BarChart } from '@tremor/react'
-import { formatters, cn } from '@/src/lib/utils'
+import { formatters, cn } from '@/src/utils/utils'
 import {
   Card,
   CardContent,

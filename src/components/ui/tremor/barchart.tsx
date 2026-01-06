@@ -18,15 +18,15 @@ import {
 } from 'recharts'
 import type { AxisDomain } from 'recharts/types/util/types'
 
+import { useOnWindowResize } from '@/src/hooks/useOnWindomResize'
 import {
   AvailableChartColors,
+  type AvailableChartColorsKeys,
   constructCategoryColors,
   getColorClassName,
-  getYAxisDomain,
-  type AvailableChartColorsKeys,
-} from '@/src/lib/chartUtils'
-import { useOnWindowResize } from '@/src/hooks/useOnWindomResize'
-import { cx } from '@/src/lib/utils'
+} from '@/src/utils/chartColors'
+import { cx } from '@/src/utils/utils'
+import { getYAxisDomain } from '@/src/utils/getYaxisDomain'
 
 //#region Shape
 
@@ -431,13 +431,13 @@ type PayloadItem = {
   index: string
   color: AvailableChartColorsKeys
   type?: string
-  payload: any
+  payload: Record<string, unknown>
 }
 
 interface ChartTooltipProps {
   active: boolean | undefined
   payload: PayloadItem[]
-  label: string
+  label?: string | number
   valueFormatter: (value: number) => string
 }
 
@@ -604,7 +604,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
     const stacked = type === 'stacked' || type === 'percent'
 
     const prevActiveRef = React.useRef<boolean | undefined>(undefined)
-    const prevLabelRef = React.useRef<string | undefined>(undefined)
+    const prevLabelRef = React.useRef<string | number | undefined>(undefined)
 
     function valueToPercent(value: number) {
       return `${(value * 100).toFixed(0)}%`
@@ -807,14 +807,9 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                   (active !== prevActiveRef.current ||
                     label !== prevLabelRef.current)
                 ) {
-                  tooltipCallback({
-                    active,
-                    payload: cleanPayload,
-                    label: String(label),
-                  })
+                  tooltipCallback({ active, payload: cleanPayload, label })
                   prevActiveRef.current = active
-                  prevLabelRef.current =
-                    label === undefined ? undefined : String(label)
+                  prevLabelRef.current = label
                 }
 
                 return showTooltip && active ? (
@@ -822,13 +817,13 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                     <CustomTooltip
                       active={active}
                       payload={cleanPayload}
-                      label={String(label)}
+                      label={label}
                     />
                   ) : (
                     <ChartTooltip
                       active={active}
                       payload={cleanPayload}
-                      label={String(label)}
+                      label={label}
                       valueFormatter={valueFormatter}
                     />
                   )

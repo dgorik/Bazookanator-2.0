@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { cn } from '@/src/utils/utils'
 import { Button } from '@/src/components/ui/buttons/button'
 import {
   Card,
@@ -77,7 +78,8 @@ export default function SignupForm({
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    // Find line 84 and update the Card:
+    <Card className={cn('w-full max-w-md mx-auto', className)} {...props}>
       <CardHeader>
         <CardTitle className="text-2xl">Create an account</CardTitle>
         <CardDescription>Enter your information to get started</CardDescription>

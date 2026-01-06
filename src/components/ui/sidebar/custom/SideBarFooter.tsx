@@ -16,8 +16,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/src/components/ui/other - shadcn/dropdown-menu'
+import type { User } from '@supabase/supabase-js'
 
-export function SideBarFooter({ user }: { user: any }) {
+export function SideBarFooter({ user }: { user: User }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const handleClick = async () => {
@@ -35,16 +36,21 @@ export function SideBarFooter({ user }: { user: any }) {
         <SidebarMenuItem>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <SidebarMenuButton>{user.email}</SidebarMenuButton>
+              <SidebarMenuButton>
+                {user.user_metadata?.first_name
+                  ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim()
+                  : user.email}
+              </SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               side="top"
               className="w-[--radix-popper-anchor-width]"
             >
-              <DropdownMenuItem>
-                <span onClick={handleClick}>
-                  {loading ? 'Signing out...' : 'Sign out'}
-                </span>
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={handleClick}
+              >
+                {loading ? 'Signing out...' : 'Sign out'}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -1,7 +1,7 @@
 'use client'
 
 import { RiCheckLine, RiEqualizer2Line } from '@remixicon/react'
-import { cn, focusInput } from '@/src/lib/utils'
+import { cn, focusInput } from '@/src/utils/utils'
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -1,7 +1,7 @@
 import { RiArrowDownSLine, RiArrowUpSLine } from '@remixicon/react'
 import { Column } from '@tanstack/react-table'
 
-import { cx } from '@/src/lib/utils'
+import { cx } from '@/src/utils/utils'
 
 interface DataTableColumnHeaderProps<TData, TValue>
   extends React.HTMLAttributes<HTMLDivElement> {

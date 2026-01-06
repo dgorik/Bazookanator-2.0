@@ -3,7 +3,7 @@
 import * as LabelPrimitives from '@radix-ui/react-label'
 import * as React from 'react'
 
-import { cx } from '@/src/lib/utils'
+import { cx } from '@/src/utils/utils'
 
 interface CheckboxProps
   extends React.ComponentPropsWithoutRef<typeof LabelPrimitives.Root> {

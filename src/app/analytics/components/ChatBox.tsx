@@ -55,7 +55,7 @@ export default function ChatBox() {
       }
 
       setMessages((prev) => [...prev, botReply])
-    } catch (error) {
+    } catch {
       setMessages((prev) => [
         ...prev,
         {

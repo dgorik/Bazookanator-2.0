@@ -8,7 +8,7 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@/src/components/ui/tremor/Table'
-import { cx } from '@/src/lib/utils'
+import { cx } from '@/src/utils/utils'
 import * as React from 'react'
 import { DataTablePagination } from './DataTablePagination'
 

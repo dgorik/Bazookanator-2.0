@@ -59,8 +59,10 @@ export default function UpdatePassword({
       if (response.success) {
         setStatus({ type: 'success', message: response.success })
       }
-    } catch (err: any) {
-      setStatus({ type: 'error', message: err.message })
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : 'An unexpected error has occured'
+      setStatus({ type: 'error', message })
     }
   }
 

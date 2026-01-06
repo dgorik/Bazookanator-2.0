@@ -3,7 +3,7 @@
 import * as PopoverPrimitives from '@radix-ui/react-popover'
 import * as React from 'react'
 
-import { cx } from '@/src/lib/utils'
+import { cx } from '@/src/utils/utils'
 
 const Popover = (
   props: React.ComponentPropsWithoutRef<typeof PopoverPrimitives.Root>,
@@ -40,8 +40,9 @@ const PopoverClose = React.forwardRef<
 
 PopoverClose.displayName = 'PopoverClose'
 
-interface ContentProps
-  extends React.ComponentPropsWithoutRef<typeof PopoverPrimitives.Content> {}
+type ContentProps = React.ComponentPropsWithoutRef<
+  typeof PopoverPrimitives.Content
+>
 
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitives.Content>,
@@ -54,7 +55,7 @@ const PopoverContent = React.forwardRef<
       side = 'bottom',
       align = 'center',
       collisionPadding,
-      avoidCollisions,
+      avoidCollisions = true,
       ...props
     }: ContentProps,
     forwardedRef,
@@ -67,7 +68,7 @@ const PopoverContent = React.forwardRef<
           side={side}
           align={align}
           collisionPadding={collisionPadding}
-          avoidCollisions
+          avoidCollisions={avoidCollisions}
           className={cx(
             // base
             'max-h-[var(--radix-popper-available-height)] min-w-60 overflow-hidden rounded-md border p-2.5 text-sm shadow-md',

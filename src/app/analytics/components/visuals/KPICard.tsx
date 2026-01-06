@@ -1,9 +1,8 @@
 'use client'
 
-import { cn } from '@/src/lib/utils'
+import { cn } from '@/src/utils/utils'
 import { Card, CardContent } from '@/src/components/ui/other - shadcn/card'
-import { formatters } from '@/src/lib/utils'
-import { RiArrowUpLine, RiArrowDownLine } from '@remixicon/react'
+import { formatters } from '@/src/utils/utils'
 
 interface KPICardProps {
   title: string

@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/src/components/ui/tremor/select'
-import { cx, focusRing } from '@/src/lib/utils'
+import { cx, focusRing } from '@/src/utils/utils'
 import React from 'react'
 
 export type ConditionFilter = {
@@ -42,7 +42,7 @@ interface DataTableFilterProps<TData, TValue> {
     value: string
   }[]
   type?: FilterType
-  formatter?: (value: any) => string
+  formatter?: (value: string | number) => string
 }
 
 const ColumnFiltersLabel = ({

@@ -1,12 +1,11 @@
 // Tremor Raw cx [v0.0.0]
 
-import clsx, { type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
+import clsx, { type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 // clsx + twMerge (deduplicates Tailwind conflicts)
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(...inputs));
+  return twMerge(clsx(...inputs))
 }
 
 export const cx = cn //temp fix
@@ -15,31 +14,31 @@ export const cx = cn //temp fix
 
 export const focusInput = [
   // base
-  "focus:ring-2",
+  'focus:ring-2',
   // ring color
-  "focus:ring-blue-200 dark:focus:ring-blue-700/30",
+  'focus:ring-blue-200 dark:focus:ring-blue-700/30',
   // border color
-  "focus:border-blue-500 dark:focus:border-blue-700",
+  'focus:border-blue-500 dark:focus:border-blue-700',
 ]
 
 // Tremor Raw focusRing [v0.0.1]
 
 export const focusRing = [
   // base
-  "outline outline-offset-2 outline-0 focus-visible:outline-2",
+  'outline outline-offset-2 outline-0 focus-visible:outline-2',
   // outline color
-  "outline-blue-500 dark:outline-blue-500",
+  'outline-blue-500 dark:outline-blue-500',
 ]
 
 // Tremor Raw hasErrorInput [v0.0.1]
 
 export const hasErrorInput = [
   // base
-  "ring-2",
+  'ring-2',
   // border color
-  "border-red-500 dark:border-red-700",
+  'border-red-500 dark:border-red-700',
   // ring color
-  "ring-red-200 dark:ring-red-700/30",
+  'ring-red-200 dark:ring-red-700/30',
 ]
 interface CurrencyParams {
   number: number
@@ -68,24 +67,24 @@ export const formatters: FormatterFunctions = {
   currency: ({
     number,
     maxFractionDigits = 2,
-    currency = "USD",
+    currency = 'USD',
   }: CurrencyParams): string => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
       currency,
       maximumFractionDigits: maxFractionDigits,
     }).format(number)
   },
 
   unit: (number: number): string => {
-    return new Intl.NumberFormat("en-US", {
-      style: "decimal",
+    return new Intl.NumberFormat('en-US', {
+      style: 'decimal',
     }).format(number)
   },
 
   percentage: ({ number, decimals = 1 }: PercentageParams): string => {
-    return new Intl.NumberFormat("en-US", {
-      style: "percent",
+    return new Intl.NumberFormat('en-US', {
+      style: 'percent',
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     }).format(number)
@@ -93,8 +92,8 @@ export const formatters: FormatterFunctions = {
 
   million: ({ number, decimals = 1 }: MillionParams): string => {
     const inMillion = number / 1_000_000
-    return `${new Intl.NumberFormat("en-US", {
-      style: "decimal",
+    return `${new Intl.NumberFormat('en-US', {
+      style: 'decimal',
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     }).format(inMillion)}M`

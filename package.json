@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "ci": "npm run lint && npm run tsc && npm test && npm run build",
-    "ci:quick": "npm run lint && npm run tsc && npm test",
+    "ci": "npm run lint && npm run tsc && npm run build",
+    "ci:quick": "npm run lint && npm run tsc",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

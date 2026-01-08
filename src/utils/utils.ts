@@ -56,11 +56,18 @@ interface MillionParams {
   decimals?: number
 }
 
+interface CompactCurrencyParams {
+  number: number
+  maxFractionDigits?: number
+  currency?: string
+}
+
 type FormatterFunctions = {
   currency: (params: CurrencyParams) => string
   unit: (number: number) => string
   percentage: (params: PercentageParams) => string
   million: (params: MillionParams) => string
+  compactCurrency: (params: CompactCurrencyParams) => string
 }
 
 export const formatters: FormatterFunctions = {
@@ -97,5 +104,31 @@ export const formatters: FormatterFunctions = {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     }).format(inMillion)}M`
+  },
+
+  compactCurrency: ({
+    number,
+    maxFractionDigits = 1,
+    currency = 'USD',
+  }: CompactCurrencyParams): string => {
+    const absNumber = Math.abs(number)
+    const sign = number < 0 ? '-' : ''
+
+    if (absNumber >= 1_000_000_000) {
+      const billions = absNumber / 1_000_000_000
+      return `${sign}$${billions.toFixed(maxFractionDigits)}B`
+    } else if (absNumber >= 1_000_000) {
+      const millions = absNumber / 1_000_000
+      return `${sign}$${millions.toFixed(maxFractionDigits)}M`
+    } else if (absNumber >= 1_000) {
+      const thousands = absNumber / 1_000
+      return `${sign}$${thousands.toFixed(maxFractionDigits)}K`
+    } else {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency,
+        maximumFractionDigits: maxFractionDigits,
+      }).format(number)
+    }
   },
 }

@@ -79,3 +79,24 @@ export const getSalesData = async (
   return data
 }
 
+// Get sales data grouped by brand with value and target measures
+// Returns array of { brand: string, value_measure: number, target_measure: number }
+export const getSalesByBrand = async (
+  valueMeasure: string,
+  targetMeasure: string,
+  filters: Omit<SalesFilters, 'measure'>,
+  timeView: TimeView = 'total',
+) => {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase.rpc('get_sales_by_brand', {
+    p_value_measure: valueMeasure,
+    p_target_measure: targetMeasure,
+    p_division: filters.division || null,
+    p_category: filters.category || null,
+    p_location: filters.location || null,
+    p_month: filters.month || null,
+    p_time_view: timeView,
+  })
+  if (error) throw error
+  return data || []
+}

@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import useSWR from 'swr'
 import KPICard from './components/visuals/KPICard'
+import BrandValueTargetChart from './components/visuals/BrandValueTargetChart'
 import AnalyticsFilterBar from './components/AnalyticsFilterBar'
 import TimeViewTabs from './components/TimeViewTabs'
 import {
@@ -207,6 +208,23 @@ export default function MemberClient() {
           growth={kpiMetrics.growth}
         />
       </div>
+
+      {/* Brand Value vs Target Chart */}
+      <BrandValueTargetChart
+        valueMeasure={valueMeasure}
+        targetMeasure={targetMeasure}
+        filters={{
+          division:
+            selectedDivision !== ALL_OPTION ? selectedDivision : undefined,
+          brand: selectedBrand !== ALL_OPTION ? selectedBrand : undefined,
+          category:
+            selectedCategory !== ALL_OPTION ? selectedCategory : undefined,
+          location:
+            selectedLocation !== ALL_OPTION ? selectedLocation : undefined,
+          month: selectedMonth !== ALL_OPTION ? selectedMonth : undefined,
+        }}
+        timeView={timeView}
+      />
 
       {isLoading && (
         <div className="flex items-center justify-center py-8">

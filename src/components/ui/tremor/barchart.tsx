@@ -25,7 +25,7 @@ import {
   constructCategoryColors,
   getColorClassName,
 } from '@/src/utils/chartColors'
-import { cx } from '@/src/utils/utils'
+import { cx, formatters } from '@/src/utils/utils'
 import { getYAxisDomain } from '@/src/utils/getYaxisDomain'
 
 //#region Shape
@@ -452,18 +452,18 @@ const ChartTooltip = ({
       <div
         className={cx(
           // base
-          'rounded-md border text-sm shadow-md',
+          'rounded-md border text-xs shadow-md',
           // border color
           'border-gray-200 dark:border-gray-800',
           // background color
           'bg-white dark:bg-gray-950',
         )}
       >
-        <div className={cx('border-b border-inherit px-4 py-2')}>
+        <div className={cx('border-b border-inherit px-2.5 py-1.5')}>
           <p
             className={cx(
               // base
-              'font-medium',
+              'font-medium text-xs',
               // text color
               'text-gray-900 dark:text-gray-50',
             )}
@@ -471,24 +471,24 @@ const ChartTooltip = ({
             {label}
           </p>
         </div>
-        <div className={cx('space-y-1 px-4 py-2')}>
+        <div className={cx('space-y-0.5 px-2.5 py-1.5')}>
           {payload.map(({ value, category, color }, index) => (
             <div
               key={`id-${index}`}
-              className="flex items-center justify-between space-x-8"
+              className="flex items-center justify-between space-x-6"
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1.5">
                 <span
                   aria-hidden="true"
                   className={cx(
-                    'size-2 shrink-0 rounded-xs',
+                    'size-1.5 shrink-0 rounded-xs',
                     getColorClassName(color, 'bg'),
                   )}
                 />
                 <p
                   className={cx(
                     // base
-                    'text-right whitespace-nowrap',
+                    'text-right whitespace-nowrap text-xs',
                     // text color
                     'text-gray-700 dark:text-gray-300',
                   )}
@@ -499,7 +499,7 @@ const ChartTooltip = ({
               <p
                 className={cx(
                   // base
-                  'text-right font-medium whitespace-nowrap tabular-nums',
+                  'text-right font-medium whitespace-nowrap tabular-nums text-xs',
                   // text color
                   'text-gray-900 dark:text-gray-50',
                 )}
@@ -554,6 +554,7 @@ interface BarChartProps extends React.HTMLAttributes<HTMLDivElement> {
   legendPosition?: 'left' | 'center' | 'right'
   tooltipCallback?: (tooltipCallbackContent: TooltipProps) => void
   customTooltip?: React.ComponentType<TooltipProps>
+  compactYAxis?: boolean
 }
 
 const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
@@ -588,6 +589,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
       legendPosition = 'right',
       tooltipCallback,
       customTooltip,
+      compactYAxis = false,
       ...other
     } = props
     const CustomTooltip = customTooltip
@@ -602,6 +604,12 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
     const yAxisDomain = getYAxisDomain(autoMinValue, minValue, maxValue)
     const hasOnValueChange = !!onValueChange
     const stacked = type === 'stacked' || type === 'percent'
+
+    // Use compact formatting for Y-axis if enabled
+    const yAxisFormatter = compactYAxis
+      ? (value: number) =>
+          formatters.compactCurrency({ number: value, maxFractionDigits: 1 })
+      : valueFormatter
 
     const prevActiveRef = React.useRef<boolean | undefined>(undefined)
     const prevLabelRef = React.useRef<string | number | undefined>(undefined)
@@ -716,7 +724,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                     type: 'number',
                     domain: yAxisDomain as AxisDomain,
                     tickFormatter:
-                      type === 'percent' ? valueToPercent : valueFormatter,
+                      type === 'percent' ? valueToPercent : yAxisFormatter,
                     allowDecimals: allowDecimals,
                   })}
             >
@@ -754,7 +762,7 @@ const BarChart = React.forwardRef<HTMLDivElement, BarChartProps>(
                     type: 'number',
                     domain: yAxisDomain as AxisDomain,
                     tickFormatter:
-                      type === 'percent' ? valueToPercent : valueFormatter,
+                      type === 'percent' ? valueToPercent : yAxisFormatter,
                     allowDecimals: allowDecimals,
                   }
                 : {

@@ -7,27 +7,32 @@ import BrandValueTargetChart from './components/visuals/BrandValueTargetChart'
 import AnalyticsFilterBar from './components/AnalyticsFilterBar'
 import TimeViewTabs from './components/TimeViewTabs'
 import {
-  getMeasures,
   getFilterOptions,
   getSalesData,
   type TimeView,
   type SalesFilters,
 } from '@/src/lib/fetcher/fetchers'
-import { DEFAULT_MEASURES, ANALYTICS_MONTHS } from '@/src/data/filter_data'
+import {
+  DEFAULT_MEASURES,
+  ANALYTICS_MONTHS,
+  DEFAULT_YEARS,
+} from '@/src/data/filter_data'
 
 const ALL_OPTION = 'All'
 
 export default function MemberClient() {
   // Filter state
-  const [selectedMonth, setSelectedMonth] = useState<string>(ALL_OPTION)
-  const [selectedDivision, setSelectedDivision] = useState<string>(ALL_OPTION)
-  const [selectedBrand, setSelectedBrand] = useState<string>(ALL_OPTION)
-  const [selectedCategory, setSelectedCategory] = useState<string>(ALL_OPTION)
-  const [selectedLocation, setSelectedLocation] = useState<string>(ALL_OPTION)
-  const [valueMeasure, setValueMeasure] = useState<string>(DEFAULT_MEASURES[0])
-  const [targetMeasure, setTargetMeasure] = useState<string>(
+  const [selectedMonth, setSelectedMonth] = useState(ALL_OPTION)
+  const [selectedDivision, setSelectedDivision] = useState(ALL_OPTION)
+  const [selectedBrand, setSelectedBrand] = useState(ALL_OPTION)
+  const [selectedCategory, setSelectedCategory] = useState(ALL_OPTION)
+  const [selectedLocation, setSelectedLocation] = useState(ALL_OPTION)
+  const [valueMeasure, setValueMeasure] = useState(DEFAULT_MEASURES[0])
+  const [targetMeasure, setTargetMeasure] = useState(
     DEFAULT_MEASURES[1] || DEFAULT_MEASURES[0],
   )
+  const [valueMeasureYear, setValueMeasureYear] = useState('2025')
+  const [targetMeasureYear, setTargetMeasureYear] = useState('2025')
 
   // Time view state
   const [timeView, setTimeView] = useState<TimeView>('total')
@@ -35,7 +40,10 @@ export default function MemberClient() {
   // Fetch filter options
   const { data: dbMeasures, isLoading: isLoadingMeasures } = useSWR(
     'measures',
-    getMeasures,
+    () => getFilterOptions('measures'),
+  )
+  const { data: dbYears, isLoading: isLoadingYears } = useSWR('year', () =>
+    getFilterOptions('year'),
   )
   const { data: divisions, isLoading: isLoadingDivisions } = useSWR(
     ['filter-options', 'division'],
@@ -59,6 +67,11 @@ export default function MemberClient() {
     if (!dbMeasures || dbMeasures.length === 0) return DEFAULT_MEASURES
     return dbMeasures.filter(Boolean)
   }, [dbMeasures])
+
+  const availableYears = useMemo(() => {
+    if (!dbYears || dbYears.length === 0) return DEFAULT_YEARS
+    return dbYears.filter(Boolean)
+  }, [dbYears])
 
   const addAllOption = (options: string[] | undefined) => {
     if (!options || options.length === 0) return [ALL_OPTION]
@@ -184,11 +197,25 @@ export default function MemberClient() {
             isLoading: isLoadingMeasures,
           },
           {
+            label: 'Value Measure Year',
+            value: valueMeasureYear,
+            options: availableYears,
+            onChange: setValueMeasureYear,
+            isLoading: isLoadingYears,
+          },
+          {
             label: 'Target Measure',
             value: targetMeasure,
             options: availableMeasures,
             onChange: setTargetMeasure,
             isLoading: isLoadingMeasures,
+          },
+          {
+            label: 'Target Measure Year',
+            value: targetMeasureYear,
+            options: availableYears,
+            onChange: setTargetMeasureYear,
+            isLoading: isLoadingYears,
           },
         ]}
         currentTab={timeView}

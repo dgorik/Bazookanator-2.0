@@ -1,7 +1,9 @@
 -- Function to get sales aggregated by brand with value and target measures
 CREATE OR REPLACE FUNCTION get_sales_by_brand(
   p_value_measure text,
+  p_value_measure_year int,
   p_target_measure text,
+  p_target_measure_year int,
   p_division text DEFAULT NULL,
   p_category text DEFAULT NULL,
   p_location text DEFAULT NULL,

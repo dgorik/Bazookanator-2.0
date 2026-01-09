@@ -10,34 +10,6 @@ import { createClient } from '@/src/lib/client/supabase/client'
 function getSupabaseClient() {
   return createClient()
 }
-
-// Raw Data Fetcher
-export const rawDataFetcher = async () => {
-  const supabase = getSupabaseClient()
-  const { data, error } = await supabase.from('OP Database').select('*')
-  return {
-    user: data,
-    isLoading: false,
-    isError: error,
-  }
-}
-
-export const getMeasures = async () => {
-  const supabase = getSupabaseClient()
-  const { data, error } = await supabase.rpc('get_measures')
-  if (error) throw error
-  return data
-}
-
-export const getMeasureTotal = async (measureName: string) => {
-  const supabase = getSupabaseClient()
-  const { data, error } = await supabase.rpc('get_measure_total', {
-    measure_name: measureName,
-  })
-  if (error) throw error
-  return data
-}
-
 // Generic filter options fetcher - gets unique values for any column
 export const getFilterOptions = async (columnName: string) => {
   const supabase = getSupabaseClient()

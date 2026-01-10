@@ -82,6 +82,7 @@ export default function MemberClient() {
   const filters: SalesFilters = useMemo(
     () => ({
       measure: valueMeasure,
+      year: valueMeasureYear,
       division: selectedDivision !== ALL_OPTION ? selectedDivision : undefined,
       brand: selectedBrand !== ALL_OPTION ? selectedBrand : undefined,
       category: selectedCategory !== ALL_OPTION ? selectedCategory : undefined,
@@ -90,6 +91,7 @@ export default function MemberClient() {
     }),
     [
       valueMeasure,
+      valueMeasureYear,
       selectedDivision,
       selectedBrand,
       selectedCategory,
@@ -102,8 +104,9 @@ export default function MemberClient() {
     () => ({
       ...filters,
       measure: targetMeasure,
+      year: targetMeasureYear,
     }),
-    [filters, targetMeasure],
+    [filters, targetMeasure, targetMeasureYear],
   )
 
   // Fetch sales data
@@ -221,7 +224,43 @@ export default function MemberClient() {
         currentTab={timeView}
       />
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid grid-cols-2 gap-6">
+        <KPICard
+          title={
+            timeView === 'monthly'
+              ? 'Monthly Sales'
+              : timeView === 'quarterly'
+                ? 'Quarterly Sales'
+                : 'Total Sales'
+          }
+          value={kpiMetrics.value}
+          target={kpiMetrics.target}
+          growth={kpiMetrics.growth}
+        />
+        <KPICard
+          title={
+            timeView === 'monthly'
+              ? 'Monthly Location Sales'
+              : timeView === 'quarterly'
+                ? 'Quarterly Location Sales'
+                : 'Total Location Sales'
+          }
+          value={kpiMetrics.value}
+          target={kpiMetrics.target}
+          growth={kpiMetrics.growth}
+        />
+        <KPICard
+          title={
+            timeView === 'monthly'
+              ? 'Monthly Category Sales'
+              : timeView === 'quarterly'
+                ? 'Quarterly Category Sales'
+                : 'Total Category Sales'
+          }
+          value={kpiMetrics.value}
+          target={kpiMetrics.target}
+          growth={kpiMetrics.growth}
+        />
         <KPICard
           title={
             timeView === 'monthly'
@@ -239,7 +278,9 @@ export default function MemberClient() {
       {/* Brand Value vs Target Chart */}
       <BrandValueTargetChart
         valueMeasure={valueMeasure}
+        valueMeasureYear={parseInt(valueMeasureYear)}
         targetMeasure={targetMeasure}
+        targetMeasureYear={parseInt(targetMeasureYear)}
         filters={{
           division:
             selectedDivision !== ALL_OPTION ? selectedDivision : undefined,

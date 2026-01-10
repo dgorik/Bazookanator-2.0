@@ -23,6 +23,7 @@ export const getFilterOptions = async (columnName: string) => {
 // Filter types
 export interface SalesFilters {
   measure?: string
+  year?: string
   division?: string
   brand?: string
   category?: string
@@ -40,6 +41,7 @@ export const getSalesData = async (
   const supabase = getSupabaseClient()
   const { data, error } = await supabase.rpc('get_sales_by_filters', {
     p_measure: filters.measure,
+    p_year: filters.year,
     p_division: filters.division,
     p_brand: filters.brand,
     p_category: filters.category,

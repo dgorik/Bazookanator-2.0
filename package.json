@@ -4,18 +4,19 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "ci": "npm run lint && npm run tsc && npm run build",
-    "ci:quick": "npm run lint && npm run tsc",
-    "db:new": "supabase migration new",
-    "db:push": "supabase db push",
-    "db:list": "supabase migration list",
-    "db:types": "supabase gen types typescript --linked > types/supabase.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
     "tsc": "tsc --noEmit",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "ci": "npm run lint && npm run tsc && npm run build",
+    "ci:quick": "npm run lint && npm run tsc",
+    "db:new": "supabase migration new",
+    "db:push": "supabase db push",
+    "db:pull": "supabase db pull",
+    "db:list": "supabase migration list",
+    "db:types": "supabase gen types typescript --linked > types/supabase.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.7",

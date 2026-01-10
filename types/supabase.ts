@@ -312,6 +312,7 @@ export type Database = {
           p_measure?: string
           p_month?: string
           p_time_view?: string
+          p_year?: string
         }
         Returns: number
       }

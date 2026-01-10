@@ -1,6 +1,6 @@
--- Function to get aggregated sales with multiple filters and time view
 CREATE OR REPLACE FUNCTION get_sales_by_filters(
   p_measure text DEFAULT NULL,
+  p_year text DEFAULT NULL,
   p_division text DEFAULT NULL,
   p_brand text DEFAULT NULL,
   p_category text DEFAULT NULL,
@@ -29,6 +29,7 @@ BEGIN
   WHERE 
     -- Apply filters only if they are provided (not null)
     (p_measure IS NULL OR measure = p_measure)
+    AND (p_year IS NULL OR year = p_year)
     AND (p_division IS NULL OR division = p_division)
     AND (p_brand IS NULL OR brand = p_brand)
     AND (p_category IS NULL OR category = p_category)

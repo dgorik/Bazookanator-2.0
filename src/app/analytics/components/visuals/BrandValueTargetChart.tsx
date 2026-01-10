@@ -26,7 +26,9 @@ interface BrandSalesData {
 
 interface BrandValueTargetChartProps {
   valueMeasure: string
+  valueMeasureYear: number
   targetMeasure: string
+  targetMeasureYear: number
   filters: Omit<SalesFilters, 'measure'>
   timeView: TimeView
   title?: string
@@ -36,7 +38,9 @@ interface BrandValueTargetChartProps {
 
 export default function BrandValueTargetChart({
   valueMeasure,
+  valueMeasureYear,
   targetMeasure,
+  targetMeasureYear,
   filters,
   timeView,
   title = 'Brand Performance: Value vs Target',
@@ -45,8 +49,24 @@ export default function BrandValueTargetChart({
 }: BrandValueTargetChartProps) {
   // Fetch sales data grouped by brand
   const { data, isLoading, error } = useSWR(
-    ['sales-by-brand', valueMeasure, targetMeasure, filters, timeView],
-    () => getSalesByBrand(valueMeasure, targetMeasure, filters, timeView),
+    [
+      'sales-by-brand',
+      valueMeasure,
+      valueMeasureYear,
+      targetMeasure,
+      targetMeasureYear,
+      filters,
+      timeView,
+    ],
+    () =>
+      getSalesByBrand(
+        valueMeasure,
+        valueMeasureYear,
+        targetMeasure,
+        targetMeasureYear,
+        filters,
+        timeView,
+      ),
   )
 
   // Transform data for Tremor BarChart

@@ -39,12 +39,12 @@ export const getSalesData = async (
 ) => {
   const supabase = getSupabaseClient()
   const { data, error } = await supabase.rpc('get_sales_by_filters', {
-    p_measure: filters.measure || null,
-    p_division: filters.division || null,
-    p_brand: filters.brand || null,
-    p_category: filters.category || null,
-    p_location: filters.location || null,
-    p_month: filters.month || null,
+    p_measure: filters.measure,
+    p_division: filters.division,
+    p_brand: filters.brand,
+    p_category: filters.category,
+    p_location: filters.location,
+    p_month: filters.month,
     p_time_view: timeView,
   })
   if (error) throw error
@@ -55,18 +55,22 @@ export const getSalesData = async (
 // Returns array of { brand: string, value_measure: number, target_measure: number }
 export const getSalesByBrand = async (
   valueMeasure: string,
+  valueMeasureYear: number,
   targetMeasure: string,
+  targetMeasureYear: number,
   filters: Omit<SalesFilters, 'measure'>,
   timeView: TimeView = 'total',
 ) => {
   const supabase = getSupabaseClient()
   const { data, error } = await supabase.rpc('get_sales_by_brand', {
     p_value_measure: valueMeasure,
+    p_value_measure_year: valueMeasureYear,
     p_target_measure: targetMeasure,
-    p_division: filters.division || null,
-    p_category: filters.category || null,
-    p_location: filters.location || null,
-    p_month: filters.month || null,
+    p_target_measure_year: targetMeasureYear,
+    p_division: filters.division,
+    p_category: filters.category,
+    p_location: filters.location,
+    p_month: filters.month,
     p_time_view: timeView,
   })
   if (error) throw error

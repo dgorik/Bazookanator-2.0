@@ -78,3 +78,46 @@ export const getSalesByBrand = async (
   if (error) throw error
   return data || []
 }
+
+// Get top category sales
+// Returns { category: string, sales: number } or null
+export const getTopCategorySales = async (
+  filters: SalesFilters,
+  timeView: TimeView = 'total',
+) => {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase.rpc('get_top_category_sales', {
+    p_measure: filters.measure,
+    p_year: filters.year,
+    p_division: filters.division,
+    p_brand: filters.brand,
+    p_location: filters.location,
+    p_month: filters.month,
+    p_time_view: timeView,
+  })
+  if (error) throw error
+  const result = data as { category: string; sales: number }[] | null
+  return result && result.length > 0 ? result[0] : null
+}
+
+// Get top subbrand sales
+// Returns { sub_brand: string, sales: number } or null
+export const getTopSubBrandSales = async (
+  filters: SalesFilters,
+  timeView: TimeView = 'total',
+) => {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase.rpc('get_top_subbrand_sales', {
+    p_measure: filters.measure,
+    p_year: filters.year,
+    p_division: filters.division,
+    p_brand: filters.brand,
+    p_category: filters.category,
+    p_location: filters.location,
+    p_month: filters.month,
+    p_time_view: timeView,
+  })
+  if (error) throw error
+  const result = data as { sub_brand: string; sales: number }[] | null
+  return result && result.length > 0 ? result[0] : null
+}

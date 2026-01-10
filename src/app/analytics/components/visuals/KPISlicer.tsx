@@ -44,7 +44,7 @@ export default function KPISlicer({
             {selectedMeasure || 'Select measure'}
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="max-h-56 overflow-y-auto min-w-56">
+        <DropdownMenuContent className="max-h-36 overflow-y-auto min-w-36">
           <DropdownMenuLabel>Select {label}</DropdownMenuLabel>
           {measures.map((measure) => (
             <DropdownMenuItem

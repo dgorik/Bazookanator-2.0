@@ -316,6 +316,37 @@ export type Database = {
         }
         Returns: number
       }
+      get_top_category_sales: {
+        Args: {
+          p_brand?: string
+          p_division?: string
+          p_location?: string
+          p_measure?: string
+          p_month?: string
+          p_time_view?: string
+          p_year?: string
+        }
+        Returns: {
+          category: string
+          sales: number
+        }[]
+      }
+      get_top_subbrand_sales: {
+        Args: {
+          p_brand?: string
+          p_category?: string
+          p_division?: string
+          p_location?: string
+          p_measure?: string
+          p_month?: string
+          p_time_view?: string
+          p_year?: string
+        }
+        Returns: {
+          sales: number
+          sub_brand: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

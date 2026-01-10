@@ -2,13 +2,12 @@
 
 import { useState, useMemo } from 'react'
 import useSWR from 'swr'
-import KPICard from './components/visuals/KPICard'
+import KPISection from './components/KPISection'
 import BrandValueTargetChart from './components/visuals/BrandValueTargetChart'
 import AnalyticsFilterBar from './components/AnalyticsFilterBar'
 import TimeViewTabs from './components/TimeViewTabs'
 import {
   getFilterOptions,
-  getSalesData,
   type TimeView,
   type SalesFilters,
 } from '@/src/lib/fetcher/fetchers'
@@ -31,8 +30,8 @@ export default function MemberClient() {
   const [targetMeasure, setTargetMeasure] = useState(
     DEFAULT_MEASURES[1] || DEFAULT_MEASURES[0],
   )
-  const [valueMeasureYear, setValueMeasureYear] = useState('2025')
-  const [targetMeasureYear, setTargetMeasureYear] = useState('2025')
+  const [valueMeasureYear, setValueMeasureYear] = useState('2024')
+  const [targetMeasureYear, setTargetMeasureYear] = useState('2024')
 
   // Time view state
   const [timeView, setTimeView] = useState<TimeView>('total')
@@ -109,32 +108,6 @@ export default function MemberClient() {
     [filters, targetMeasure, targetMeasureYear],
   )
 
-  // Fetch sales data
-  const { data: valueData, isLoading: isLoadingValue } = useSWR(
-    ['sales-value', filters, timeView],
-    () => getSalesData(filters, timeView),
-  )
-
-  const { data: targetData, isLoading: isLoadingTarget } = useSWR(
-    ['sales-target', targetFilters, timeView],
-    () => getSalesData(targetFilters, timeView),
-  )
-
-  // Calculate KPI metrics
-  const kpiMetrics = useMemo(() => {
-    const val = Number(valueData) || 0
-    const tgt = Number(targetData) || 0
-    const growth = tgt !== 0 ? ((val - tgt) / tgt) * 100 : 0
-
-    return {
-      value: val,
-      target: tgt,
-      growth: growth,
-    }
-  }, [valueData, targetData])
-
-  const isLoading = isLoadingValue || isLoadingTarget
-
   return (
     <section className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -152,46 +125,12 @@ export default function MemberClient() {
       <AnalyticsFilterBar
         configs={[
           {
-            label: 'Month',
-            value: selectedMonth,
-            options: addAllOption(ANALYTICS_MONTHS),
-            onChange: setSelectedMonth,
-            showOnTabs: ['monthly'],
-          },
-          {
             label: 'Division',
             value: selectedDivision,
             options: addAllOption(divisions),
             onChange: setSelectedDivision,
             isLoading: isLoadingDivisions,
           },
-          {
-            label: 'Brand',
-            value: selectedBrand,
-            options: addAllOption(brands),
-            onChange: setSelectedBrand,
-            isLoading: isLoadingBrands,
-          },
-          {
-            label: 'Category',
-            value: selectedCategory,
-            options: addAllOption(categories),
-            onChange: setSelectedCategory,
-            isLoading: isLoadingCategories,
-          },
-          {
-            label: 'Location',
-            value: selectedLocation,
-            options: addAllOption(locations),
-            onChange: setSelectedLocation,
-            isLoading: isLoadingLocations,
-          },
-        ]}
-        currentTab={timeView}
-      />
-
-      <AnalyticsFilterBar
-        configs={[
           {
             label: 'Value Measure',
             value: valueMeasure,
@@ -223,55 +162,45 @@ export default function MemberClient() {
         ]}
         currentTab={timeView}
       />
+      <div className="space-y-8">
+        <AnalyticsFilterBar
+          configs={[
+            {
+              label: 'Month',
+              value: selectedMonth,
+              options: addAllOption(ANALYTICS_MONTHS),
+              onChange: setSelectedMonth,
+              showOnTabs: ['monthly'],
+            },
+            {
+              label: 'Location',
+              value: selectedLocation,
+              options: addAllOption(locations),
+              onChange: setSelectedLocation,
+              isLoading: isLoadingLocations,
+            },
+            {
+              label: 'SubBrand',
+              value: selectedBrand,
+              options: addAllOption(brands),
+              onChange: setSelectedBrand,
+              isLoading: isLoadingBrands,
+            },
+            {
+              label: 'Category',
+              value: selectedCategory,
+              options: addAllOption(categories),
+              onChange: setSelectedCategory,
+              isLoading: isLoadingCategories,
+            },
+          ]}
+          currentTab={timeView}
+        />
 
-      <div className="grid grid-cols-2 gap-6">
-        <KPICard
-          title={
-            timeView === 'monthly'
-              ? 'Monthly Sales'
-              : timeView === 'quarterly'
-                ? 'Quarterly Sales'
-                : 'Total Sales'
-          }
-          value={kpiMetrics.value}
-          target={kpiMetrics.target}
-          growth={kpiMetrics.growth}
-        />
-        <KPICard
-          title={
-            timeView === 'monthly'
-              ? 'Monthly Location Sales'
-              : timeView === 'quarterly'
-                ? 'Quarterly Location Sales'
-                : 'Total Location Sales'
-          }
-          value={kpiMetrics.value}
-          target={kpiMetrics.target}
-          growth={kpiMetrics.growth}
-        />
-        <KPICard
-          title={
-            timeView === 'monthly'
-              ? 'Monthly Category Sales'
-              : timeView === 'quarterly'
-                ? 'Quarterly Category Sales'
-                : 'Total Category Sales'
-          }
-          value={kpiMetrics.value}
-          target={kpiMetrics.target}
-          growth={kpiMetrics.growth}
-        />
-        <KPICard
-          title={
-            timeView === 'monthly'
-              ? 'Monthly Sales'
-              : timeView === 'quarterly'
-                ? 'Quarterly Sales'
-                : 'Total Sales'
-          }
-          value={kpiMetrics.value}
-          target={kpiMetrics.target}
-          growth={kpiMetrics.growth}
+        <KPISection
+          filters={filters}
+          targetFilters={targetFilters}
+          timeView={timeView}
         />
       </div>
 
@@ -293,14 +222,6 @@ export default function MemberClient() {
         }}
         timeView={timeView}
       />
-
-      {isLoading && (
-        <div className="flex items-center justify-center py-8">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Loading data...
-          </p>
-        </div>
-      )}
     </section>
   )
 }

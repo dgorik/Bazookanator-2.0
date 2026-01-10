@@ -10,6 +10,7 @@ interface KPICardProps {
   growth: number
   target: number
   valueFormatter?: (value: number) => string
+  subtitle?: string
   className?: string
 }
 
@@ -38,7 +39,7 @@ export default function KPICard({
         className,
       )}
     >
-      <CardContent className="p-0">
+      <CardContent>
         {/* Header with title and growth badge */}
         <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-gray-800">
           <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
@@ -57,7 +58,7 @@ export default function KPICard({
         </div>
 
         {/* Main value */}
-        <div className="px-6 py-5">
+        <div className="px-3 py-5">
           <div className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
             {formattedValue}
           </div>

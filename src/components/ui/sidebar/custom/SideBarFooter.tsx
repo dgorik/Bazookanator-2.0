@@ -36,11 +36,7 @@ export function SideBarFooter({ user }: { user: User }) {
         <SidebarMenuItem>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <SidebarMenuButton>
-                {user.user_metadata?.first_name
-                  ? `${user.user_metadata.first_name} ${user.user_metadata.last_name || ''}`.trim()
-                  : user.email}
-              </SidebarMenuButton>
+              <SidebarMenuButton>{user.email}</SidebarMenuButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               side="top"

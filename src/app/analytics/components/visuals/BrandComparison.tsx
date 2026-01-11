@@ -28,6 +28,7 @@ export default function BrandComparison({
   description = 'Compare brand performance across measures',
   className,
 }: BrandComparisonProps) {
+  //here we are populating measure_1_val and measure_2_val with actuals measure names
   const transformedData = useMemo(() => {
     return data.map((item) => ({
       brand: item.brand,

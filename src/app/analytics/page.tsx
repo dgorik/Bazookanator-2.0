@@ -27,9 +27,7 @@ export default function MemberClient() {
   const [selectedCategory, setSelectedCategory] = useState(ALL_OPTION)
   const [selectedLocation, setSelectedLocation] = useState(ALL_OPTION)
   const [valueMeasure, setValueMeasure] = useState(DEFAULT_MEASURES[0])
-  const [targetMeasure, setTargetMeasure] = useState(
-    DEFAULT_MEASURES[1] || DEFAULT_MEASURES[0],
-  )
+  const [targetMeasure, setTargetMeasure] = useState(DEFAULT_MEASURES[0])
   const [valueMeasureYear, setValueMeasureYear] = useState('2024')
   const [targetMeasureYear, setTargetMeasureYear] = useState('2024')
 
@@ -38,11 +36,12 @@ export default function MemberClient() {
 
   // Fetch filter options
   const { data: dbMeasures, isLoading: isLoadingMeasures } = useSWR(
-    'measures',
+    ['filter-options', 'measures'],
     () => getFilterOptions('measures'),
   )
-  const { data: dbYears, isLoading: isLoadingYears } = useSWR('year', () =>
-    getFilterOptions('year'),
+  const { data: dbYears, isLoading: isLoadingYears } = useSWR(
+    ['filter-options', 'year'],
+    () => getFilterOptions('year'),
   )
   const { data: divisions, isLoading: isLoadingDivisions } = useSWR(
     ['filter-options', 'division'],
@@ -61,7 +60,6 @@ export default function MemberClient() {
     () => getFilterOptions('location'),
   )
 
-  // Process filter options with "All" option
   const availableMeasures = useMemo(() => {
     if (!dbMeasures || dbMeasures.length === 0) return DEFAULT_MEASURES
     return dbMeasures.filter(Boolean)

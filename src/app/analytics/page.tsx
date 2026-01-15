@@ -26,10 +26,10 @@ export default function MemberClient() {
   const [selectedBrand, setSelectedBrand] = useState(ALL_OPTION)
   const [selectedCategory, setSelectedCategory] = useState(ALL_OPTION)
   const [selectedLocation, setSelectedLocation] = useState(ALL_OPTION)
-  const [valueMeasure, setValueMeasure] = useState(DEFAULT_MEASURES[0])
-  const [targetMeasure, setTargetMeasure] = useState(DEFAULT_MEASURES[0])
-  const [valueMeasureYear, setValueMeasureYear] = useState('2024')
-  const [targetMeasureYear, setTargetMeasureYear] = useState('2024')
+  const [valueMeasure, setValueMeasure] = useState('blank')
+  const [targetMeasure, setTargetMeasure] = useState('blank')
+  const [valueMeasureYear, setValueMeasureYear] = useState('blank')
+  const [targetMeasureYear, setTargetMeasureYear] = useState('blank')
 
   // Time view state
   const [timeView, setTimeView] = useState<TimeView>('total')
@@ -64,6 +64,14 @@ export default function MemberClient() {
     if (!dbMeasures || dbMeasures.length === 0) return DEFAULT_MEASURES
     return dbMeasures.filter(Boolean)
   }, [dbMeasures])
+
+  const valueMeasureOptions = useMemo(() => {
+    return availableMeasures.filter((measure) => measure != targetMeasure)
+  }, [availableMeasures, targetMeasure])
+
+  const targetMeasureOptions = useMemo(() => {
+    return availableMeasures.filter((measure) => measure != valueMeasure)
+  }, [availableMeasures, valueMeasure])
 
   const availableYears = useMemo(() => {
     if (!dbYears || dbYears.length === 0) return DEFAULT_YEARS
@@ -132,7 +140,7 @@ export default function MemberClient() {
           {
             label: 'Value Measure',
             value: valueMeasure,
-            options: availableMeasures,
+            options: valueMeasureOptions,
             onChange: setValueMeasure,
             isLoading: isLoadingMeasures,
           },
@@ -146,7 +154,7 @@ export default function MemberClient() {
           {
             label: 'Target Measure',
             value: targetMeasure,
-            options: availableMeasures,
+            options: targetMeasureOptions,
             onChange: setTargetMeasure,
             isLoading: isLoadingMeasures,
           },

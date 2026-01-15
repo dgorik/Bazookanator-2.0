@@ -94,10 +94,41 @@ export default function BrandValueTargetChart({
     })
   }, [data, valueMeasure, targetMeasure, filters.brand])
 
-  const categories = useMemo(
-    () => [valueMeasure, targetMeasure],
-    [valueMeasure, targetMeasure],
-  )
+  const categories = useMemo(() => {
+    const cats = [valueMeasure, targetMeasure]
+    const hasDuplicates = new Set(cats).size !== cats.length
+    const hasBlankOrFalsy = cats.some((c) => !c || c === 'blank')
+
+    // #region agent log
+    if (hasDuplicates || hasBlankOrFalsy) {
+      fetch(
+        'http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: 'debug-session',
+            runId: 'run1',
+            hypothesisId: 'C',
+            location:
+              'src/app/analytics/components/visuals/BrandValueTargetChart.tsx:categories',
+            message: 'Computed categories for BarChart',
+            data: {
+              valueMeasure,
+              targetMeasure,
+              categories: cats,
+              hasDuplicates,
+              hasBlankOrFalsy,
+            },
+            timestamp: Date.now(),
+          }),
+        },
+      ).catch(() => {})
+    }
+    // #endregion
+
+    return cats
+  }, [valueMeasure, targetMeasure])
 
   const valueFormatter = useMemo(
     () => (value: number) =>
@@ -156,6 +187,52 @@ export default function BrandValueTargetChart({
         <CardContent className="flex h-80 items-center justify-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
             No data available
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const measuresInvalid =
+    !valueMeasure ||
+    !targetMeasure ||
+    valueMeasure === 'blank' ||
+    targetMeasure === 'blank'
+
+  // If measures are not ready / collide, don't render Bars keyed by category
+  if (measuresInvalid) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: 'debug-session',
+        runId: 'run1',
+        hypothesisId: 'D',
+        location:
+          'src/app/analytics/components/visuals/BrandValueTargetChart.tsx:guard',
+        message: 'Guarded BarChart render due to invalid/duplicate measures',
+        data: {
+          valueMeasure,
+          targetMeasure,
+          categories: [valueMeasure, targetMeasure],
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {})
+    // #endregion
+
+    return (
+      <Card className={cn('w-full', className)}>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base font-semibold">{title}</CardTitle>
+          {description && (
+            <CardDescription className="text-sm">{description}</CardDescription>
+          )}
+        </CardHeader>
+        <CardContent className="flex h-80 items-center justify-center">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Select two different measures to compare.
           </p>
         </CardContent>
       </Card>

@@ -46,9 +46,9 @@ export default function KPISlicer({
         </DropdownMenuTrigger>
         <DropdownMenuContent className="max-h-36 overflow-y-auto min-w-36">
           <DropdownMenuLabel>Select {label}</DropdownMenuLabel>
-          {measures.map((measure) => (
+          {measures.map((measure, index) => (
             <DropdownMenuItem
-              key={measure}
+              key={`${label}-${measure}-${index}`}
               onClick={() => onMeasureChange(measure)}
               className={cn(
                 'flex items-center justify-between gap-x-4',

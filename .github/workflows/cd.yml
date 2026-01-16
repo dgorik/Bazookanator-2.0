@@ -100,7 +100,7 @@ jobs:
           supabase gen types typescript --linked --schema public > types/supabase.ts
 
           # Check if types were generated successfully
-          if [ -s lib/supabase/types.ts ]; then
+          if [ -s types/supabase.ts ]; then
             echo "✅ TypeScript types generated successfully"
             
             # Check if the generated file actually differs from what's in git

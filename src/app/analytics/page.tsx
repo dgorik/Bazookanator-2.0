@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
+import { useUrlState } from '@/src/hooks/useUrlState'
 import useSWR from 'swr'
 import KPISection from './components/KPISection'
 import BrandValueTargetChart from './components/visuals/BrandValueTargetChart'
@@ -21,18 +22,37 @@ const ALL_OPTION = 'All'
 
 export default function MemberClient() {
   // Filter state
-  const [selectedMonth, setSelectedMonth] = useState(ALL_OPTION)
-  const [selectedDivision, setSelectedDivision] = useState(ALL_OPTION)
-  const [selectedBrand, setSelectedBrand] = useState(ALL_OPTION)
-  const [selectedCategory, setSelectedCategory] = useState(ALL_OPTION)
-  const [selectedLocation, setSelectedLocation] = useState(ALL_OPTION)
-  const [valueMeasure, setValueMeasure] = useState('blank')
-  const [targetMeasure, setTargetMeasure] = useState('blank')
-  const [valueMeasureYear, setValueMeasureYear] = useState('blank')
-  const [targetMeasureYear, setTargetMeasureYear] = useState('blank')
+  const [selectedMonth, setSelectedMonth] = useUrlState('month', ALL_OPTION)
+  const [selectedDivision, setSelectedDivision] = useUrlState(
+    'division',
+    ALL_OPTION,
+  )
+  const [selectedBrand, setSelectedBrand] = useUrlState('brand', ALL_OPTION)
+  const [selectedCategory, setSelectedCategory] = useUrlState(
+    'category',
+    ALL_OPTION,
+  )
+  const [selectedLocation, setSelectedLocation] = useUrlState(
+    'location',
+    ALL_OPTION,
+  )
 
-  // Time view state
-  const [timeView, setTimeView] = useState<TimeView>('total')
+  const [valueMeasure, setValueMeasure] = useUrlState('valueMeasure', 'blank')
+  const [targetMeasure, setTargetMeasure] = useUrlState(
+    'targetMeasure',
+    'blank',
+  )
+  const [valueMeasureYear, setValueMeasureYear] = useUrlState(
+    'valueMeasureYear',
+    'blank',
+  )
+  const [targetMeasureYear, setTargetMeasureYear] = useUrlState(
+    'targetMeasureYear',
+    'blank',
+  )
+
+  // Time view state (monthly | quarterly | total)
+  const [timeView, setTimeView] = useUrlState<TimeView>('timeView', 'total')
 
   // Fetch filter options
   const { data: dbMeasures, isLoading: isLoadingMeasures } = useSWR(
@@ -131,13 +151,6 @@ export default function MemberClient() {
       <AnalyticsFilterBar
         configs={[
           {
-            label: 'Division',
-            value: selectedDivision,
-            options: addAllOption(divisions),
-            onChange: setSelectedDivision,
-            isLoading: isLoadingDivisions,
-          },
-          {
             label: 'Value Measure',
             value: valueMeasure,
             options: valueMeasureOptions,
@@ -198,6 +211,13 @@ export default function MemberClient() {
               options: addAllOption(categories),
               onChange: setSelectedCategory,
               isLoading: isLoadingCategories,
+            },
+            {
+              label: 'Divison',
+              value: selectedDivision,
+              options: addAllOption(divisions),
+              onChange: setSelectedDivision,
+              isLoading: isLoadingDivisions,
             },
           ]}
           currentTab={timeView}

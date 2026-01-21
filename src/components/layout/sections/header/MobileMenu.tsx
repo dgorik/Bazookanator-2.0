@@ -65,12 +65,12 @@ export default function MobileMenu() {
               </a>
             ))}
 
-            <Button asChild className="w-1/4">
+            <Button asChild className="w-1/2">
               <Link href="/auth/login" prefetch={false}>
                 Sign In
               </Link>
             </Button>
-            <Button asChild className="w-1/4">
+            <Button asChild className="w-1/2">
               <Link href="/auth/signup" prefetch={false}>
                 Sign Up
               </Link>

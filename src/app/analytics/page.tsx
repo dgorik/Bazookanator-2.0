@@ -104,10 +104,9 @@ export default function MemberClient() {
   }
 
   // Build filters object for data fetching
-  const filters: SalesFilters = useMemo(
+  const kpiFilters: SalesFilters = useMemo(
     () => ({
-      measure: valueMeasure,
-      year: valueMeasureYear,
+      measure: valueMeasure !== 'blank' ? valueMeasure : undefined,
       division: selectedDivision !== ALL_OPTION ? selectedDivision : undefined,
       brand: selectedBrand !== ALL_OPTION ? selectedBrand : undefined,
       category: selectedCategory !== ALL_OPTION ? selectedCategory : undefined,
@@ -116,7 +115,6 @@ export default function MemberClient() {
     }),
     [
       valueMeasure,
-      valueMeasureYear,
       selectedDivision,
       selectedBrand,
       selectedCategory,
@@ -125,13 +123,12 @@ export default function MemberClient() {
     ],
   )
 
-  const targetFilters: SalesFilters = useMemo(
+  const kpiTargetFilters: SalesFilters = useMemo(
     () => ({
-      ...filters,
-      measure: targetMeasure,
-      year: targetMeasureYear,
+      ...kpiFilters,
+      measure: targetMeasure !== 'blank' ? targetMeasure : undefined,
     }),
-    [filters, targetMeasure, targetMeasureYear],
+    [kpiFilters, targetMeasure, targetMeasureYear],
   )
 
   return (
@@ -224,8 +221,8 @@ export default function MemberClient() {
         />
 
         <KPISection
-          filters={filters}
-          targetFilters={targetFilters}
+          filters={kpiFilters}
+          targetFilters={kpiTargetFilters}
           timeView={timeView}
         />
       </div>

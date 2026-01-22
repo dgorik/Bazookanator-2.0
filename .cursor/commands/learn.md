@@ -20,6 +20,8 @@ When the user runs this command, provide a comprehensive explanation of the code
 
 7. **How It Connects**: Explain how this file fits into the larger codebase. What calls it? What does it call?
 
+8. **Simplification Suggestions**: Analyze the code for complexity. Suggest if/how it can be simplified, refactored, or made more readable. Point out over-engineering, unnecessary abstractions, or places where complexity could be reduced.
+
 ## Output Format
 
 Use clear headings and code snippets where helpful. Keep explanations concise but thorough. Use bullet points for lists. Highlight important concepts in **bold**.

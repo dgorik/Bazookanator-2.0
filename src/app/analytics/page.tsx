@@ -21,38 +21,24 @@ import {
 const ALL_OPTION = 'All'
 
 export default function MemberClient() {
-  // Filter state
-  const [selectedMonth, setSelectedMonth] = useUrlState('month', ALL_OPTION)
-  const [selectedDivision, setSelectedDivision] = useUrlState(
-    'division',
-    ALL_OPTION,
-  )
-  const [selectedBrand, setSelectedBrand] = useUrlState('brand', ALL_OPTION)
-  const [selectedCategory, setSelectedCategory] = useUrlState(
-    'category',
-    ALL_OPTION,
-  )
-  const [selectedLocation, setSelectedLocation] = useUrlState(
-    'location',
-    ALL_OPTION,
-  )
+  const initialFilters = {
+    month: ALL_OPTION,
+    division: ALL_OPTION,
+    brand: ALL_OPTION,
+    category: ALL_OPTION,
+    location: ALL_OPTION,
+    valueMeasure: 'blank',
+    targetMeasure: 'blank',
+    valueMeasureYear: 'blank',
+    targetMeasureYear: 'blank',
+    timeView: 'total' as TimeView,
+  }
 
-  const [valueMeasure, setValueMeasure] = useUrlState('valueMeasure', 'blank')
-  const [targetMeasure, setTargetMeasure] = useUrlState(
-    'targetMeasure',
-    'blank',
-  )
-  const [valueMeasureYear, setValueMeasureYear] = useUrlState(
-    'valueMeasureYear',
-    'blank',
-  )
-  const [targetMeasureYear, setTargetMeasureYear] = useUrlState(
-    'targetMeasureYear',
-    'blank',
-  )
+  const [filters, setFilter] = useUrlState('filters', initialFilters)
 
-  // Time view state (monthly | quarterly | total)
-  const [timeView, setTimeView] = useUrlState<TimeView>('timeView', 'total')
+  const updateFilter = (key: keyof typeof filters, value: string) => {
+    setFilter((prev) => ({ ...prev, [key]: value }))
+  }
 
   // Fetch filter options
   const { data: dbMeasures, isLoading: isLoadingMeasures } = useSWR(
@@ -86,12 +72,16 @@ export default function MemberClient() {
   }, [dbMeasures])
 
   const valueMeasureOptions = useMemo(() => {
-    return availableMeasures.filter((measure) => measure != targetMeasure)
-  }, [availableMeasures, targetMeasure])
+    return availableMeasures.filter(
+      (measure) => measure != filters.targetMeasure,
+    )
+  }, [availableMeasures, filters.targetMeasure])
 
   const targetMeasureOptions = useMemo(() => {
-    return availableMeasures.filter((measure) => measure != valueMeasure)
-  }, [availableMeasures, valueMeasure])
+    return availableMeasures.filter(
+      (measure) => measure != filters.valueMeasure,
+    )
+  }, [availableMeasures, filters.valueMeasure])
 
   const availableYears = useMemo(() => {
     if (!dbYears || dbYears.length === 0) return DEFAULT_YEARS
@@ -106,29 +96,31 @@ export default function MemberClient() {
   // Build filters object for data fetching
   const kpiFilters: SalesFilters = useMemo(
     () => ({
-      measure: valueMeasure !== 'blank' ? valueMeasure : undefined,
-      division: selectedDivision !== ALL_OPTION ? selectedDivision : undefined,
-      brand: selectedBrand !== ALL_OPTION ? selectedBrand : undefined,
-      category: selectedCategory !== ALL_OPTION ? selectedCategory : undefined,
-      location: selectedLocation !== ALL_OPTION ? selectedLocation : undefined,
-      month: selectedMonth !== ALL_OPTION ? selectedMonth : undefined,
+      measure:
+        filters.valueMeasure !== 'blank' ? filters.valueMeasure : undefined,
+      division: filters.division !== ALL_OPTION ? filters.division : undefined,
+      brand: filters.brand !== ALL_OPTION ? filters.brand : undefined,
+      category: filters.category !== ALL_OPTION ? filters.category : undefined,
+      location: filters.location !== ALL_OPTION ? filters.location : undefined,
+      month: filters.month !== ALL_OPTION ? filters.month : undefined,
     }),
     [
-      valueMeasure,
-      selectedDivision,
-      selectedBrand,
-      selectedCategory,
-      selectedLocation,
-      selectedMonth,
+      filters.valueMeasure,
+      filters.division,
+      filters.brand,
+      filters.category,
+      filters.location,
+      filters.month,
     ],
   )
 
   const kpiTargetFilters: SalesFilters = useMemo(
     () => ({
       ...kpiFilters,
-      measure: targetMeasure !== 'blank' ? targetMeasure : undefined,
+      measure:
+        filters.targetMeasure !== 'blank' ? filters.targetMeasure : undefined,
     }),
-    [kpiFilters, targetMeasure, targetMeasureYear],
+    [kpiFilters, filters.targetMeasure],
   )
 
   return (
@@ -142,108 +134,111 @@ export default function MemberClient() {
             Sales and growth stats for anonymous inc.
           </p>
         </div>
-        <TimeViewTabs selectedView={timeView} onViewChange={setTimeView} />
+        <TimeViewTabs
+          selectedView={filters.timeView}
+          onViewChange={(view) => updateFilter('timeView', view)}
+        />
       </div>
 
       <AnalyticsFilterBar
         configs={[
           {
             label: 'Value Measure',
-            value: valueMeasure,
+            value: filters.valueMeasure,
             options: valueMeasureOptions,
-            onChange: setValueMeasure,
+            onChange: (val) => updateFilter('valueMeasure', val),
             isLoading: isLoadingMeasures,
           },
           {
             label: 'Value Measure Year',
-            value: valueMeasureYear,
+            value: filters.valueMeasureYear,
             options: availableYears,
-            onChange: setValueMeasureYear,
+            onChange: (val) => updateFilter('valueMeasureYear', val),
             isLoading: isLoadingYears,
           },
           {
             label: 'Target Measure',
-            value: targetMeasure,
+            value: filters.targetMeasure,
             options: targetMeasureOptions,
-            onChange: setTargetMeasure,
+            onChange: (val) => updateFilter('targetMeasure', val),
             isLoading: isLoadingMeasures,
           },
           {
             label: 'Target Measure Year',
-            value: targetMeasureYear,
+            value: filters.targetMeasureYear,
             options: availableYears,
-            onChange: setTargetMeasureYear,
+            onChange: (val) => updateFilter('targetMeasureYear', val),
             isLoading: isLoadingYears,
           },
         ]}
-        currentTab={timeView}
+        currentTab={filters.timeView}
       />
       <div className="space-y-8">
         <AnalyticsFilterBar
           configs={[
             {
               label: 'Month',
-              value: selectedMonth,
+              value: filters.month,
               options: addAllOption(ANALYTICS_MONTHS),
-              onChange: setSelectedMonth,
+              onChange: (val) => updateFilter('month', val),
               showOnTabs: ['monthly'],
             },
             {
               label: 'Location',
-              value: selectedLocation,
+              value: filters.location,
               options: addAllOption(locations),
-              onChange: setSelectedLocation,
+              onChange: (val) => updateFilter('location', val),
               isLoading: isLoadingLocations,
             },
             {
               label: 'SubBrand',
-              value: selectedBrand,
+              value: filters.brand,
               options: addAllOption(brands),
-              onChange: setSelectedBrand,
+              onChange: (val) => updateFilter('brand', val),
               isLoading: isLoadingBrands,
             },
             {
               label: 'Category',
-              value: selectedCategory,
+              value: filters.category,
               options: addAllOption(categories),
-              onChange: setSelectedCategory,
+              onChange: (val) => updateFilter('category', val),
               isLoading: isLoadingCategories,
             },
             {
               label: 'Divison',
-              value: selectedDivision,
+              value: filters.division,
               options: addAllOption(divisions),
-              onChange: setSelectedDivision,
+              onChange: (val) => updateFilter('division', val),
               isLoading: isLoadingDivisions,
             },
           ]}
-          currentTab={timeView}
+          currentTab={filters.timeView}
         />
 
         <KPISection
           filters={kpiFilters}
           targetFilters={kpiTargetFilters}
-          timeView={timeView}
+          timeView={filters.timeView}
         />
       </div>
 
       {/* Brand Value vs Target Chart */}
       <BrandValueTargetChart
-        valueMeasure={valueMeasure}
-        valueMeasureYear={parseInt(valueMeasureYear)}
-        targetMeasure={targetMeasure}
-        targetMeasureYear={parseInt(targetMeasureYear)}
+        valueMeasure={filters.valueMeasure}
+        valueMeasureYear={parseInt(filters.valueMeasureYear)}
+        targetMeasure={filters.targetMeasure}
+        targetMeasureYear={parseInt(filters.targetMeasureYear)}
         filters={{
           division:
-            selectedDivision !== ALL_OPTION ? selectedDivision : undefined,
-          brand: selectedBrand !== ALL_OPTION ? selectedBrand : undefined,
+            filters.division !== ALL_OPTION ? filters.division : undefined,
+          brand: filters.brand !== ALL_OPTION ? filters.brand : undefined,
           category:
-            selectedCategory !== ALL_OPTION ? selectedCategory : undefined,
+            filters.category !== ALL_OPTION ? filters.category : undefined,
           location:
-            selectedLocation !== ALL_OPTION ? selectedLocation : undefined,
-          month: selectedMonth !== ALL_OPTION ? selectedMonth : undefined,
+            filters.location !== ALL_OPTION ? filters.location : undefined,
+          month: filters.month !== ALL_OPTION ? filters.month : undefined,
         }}
-        timeView={timeView}
+        timeView={filters.timeView}
       />
     </section>
   )

@@ -278,6 +278,18 @@ export type Database = {
           value_measure: number
         }[]
       }
+      get_sales_by_filters: {
+        Args: {
+          p_brand?: string
+          p_category?: string
+          p_division?: string
+          p_location?: string
+          p_measure?: string
+          p_month?: string
+          p_time_view?: string
+        }
+        Returns: number
+      }
       get_top_category_sales: {
         Args: {
           p_brand?: string

@@ -80,7 +80,7 @@ export default function KPICard({
           </div>
 
           {/* Labels */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center">
             <div className="flex flex-col">
               <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Actual

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useUrlState } from '@/src/hooks/useUrlState'
 import useSWR from 'swr'
 import KPISection from './components/KPISection'
@@ -21,20 +21,46 @@ import {
 const ALL_OPTION = 'All'
 
 export default function MemberClient() {
-  const initialFilters = {
-    month: ALL_OPTION,
-    division: ALL_OPTION,
-    brand: ALL_OPTION,
-    category: ALL_OPTION,
-    location: ALL_OPTION,
-    valueMeasure: 'blank',
-    targetMeasure: 'blank',
-    valueMeasureYear: 'blank',
-    targetMeasureYear: 'blank',
-    timeView: 'total' as TimeView,
-  }
+  const initialFilters = useMemo(
+    () => ({
+      month: ALL_OPTION,
+      division: ALL_OPTION,
+      brand: ALL_OPTION,
+      category: ALL_OPTION,
+      location: ALL_OPTION,
+      valueMeasure: 'blank',
+      targetMeasure: 'blank',
+      valueMeasureYear: 'blank',
+      targetMeasureYear: 'blank',
+      timeView: 'total' as TimeView,
+    }),
+    [],
+  )
 
-  const [filters, setFilter] = useUrlState('filters', initialFilters)
+  type FiltersState = typeof initialFilters
+
+  const serializeFilters = useCallback(
+    (value: FiltersState) => encodeURIComponent(JSON.stringify(value)),
+    [],
+  )
+
+  const deserializeFilters = useCallback(
+    (value: string) => {
+      try {
+        return JSON.parse(decodeURIComponent(value)) as FiltersState
+      } catch {
+        return initialFilters
+      }
+    },
+    [initialFilters],
+  )
+
+  const [filters, setFilter] = useUrlState(
+    'filters',
+    initialFilters,
+    serializeFilters,
+    deserializeFilters,
+  )
 
   const updateFilter = (key: keyof typeof filters, value: string) => {
     setFilter((prev) => ({ ...prev, [key]: value }))

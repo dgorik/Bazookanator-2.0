@@ -40,6 +40,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+#debug logs
+*.log
 
 # Supabase
 supabase/.temp/

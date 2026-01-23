@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { cn } from '@/src/utils/utils'
+import { loginSchema } from '@/src/lib/validations/auth'
 import Link from 'next/link'
 import { Button } from '@/src/components/ui/buttons/button'
 import {
@@ -43,13 +45,23 @@ export default function LoginForm({
 
   const handlePostUsers = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    const result = loginSchema.safeParse({
+      email,
+      password,
+    })
+
+    if (!result.success) {
+      setStatus({ type: 'error', message: result.error.issues[0].message })
+      return
+    }
+
     setLoading(true)
     setStatus(null)
     try {
-      const response = await login({
-        email,
-        password,
-      })
+      //'await' pauses THIS function, but yields control back to main thread
+      const response = await login(result.data)
+      //Resumes here only when promise resolves
       if (response.success) {
         router.push('/analytics')
         return
@@ -67,7 +79,7 @@ export default function LoginForm({
   }
 
   return (
-    <Card className={`w-full max-w-md mx-auto ${className}`} {...props}>
+    <Card className={cn('w-full max-w-md mx-auto', className)} {...props}>
       <CardHeader>
         <CardTitle className="text-2xl">Login</CardTitle>
         <CardDescription>
@@ -75,7 +87,11 @@ export default function LoginForm({
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handlePostUsers} className="flex flex-col gap-6 mb-3">
+        <form
+          onSubmit={handlePostUsers}
+          noValidate
+          className="flex flex-col gap-6 mb-3"
+        >
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input

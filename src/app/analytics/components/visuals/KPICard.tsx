@@ -59,7 +59,7 @@ export default function KPICard({
 
         {/* Main value */}
         <div className="px-3 py-5">
-          <div className="text-3xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
+          <div className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
             {formattedValue}
           </div>
         </div>
@@ -85,7 +85,7 @@ export default function KPICard({
               <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Actual
               </span>
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                 {formattedValue}
               </span>
             </div>
@@ -93,7 +93,7 @@ export default function KPICard({
               <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Target
               </span>
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+              <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                 {formattedTarget}
               </span>
             </div>

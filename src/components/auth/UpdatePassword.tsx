@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useEffect, useTransition } from 'react'
 import { Button } from '@/src/components/ui/buttons/button'
 import {
   Card,
@@ -19,19 +18,20 @@ export default function UpdatePassword({
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
   const [password, setPassword] = useState('')
+  const [isPending, startTransition] = useTransition()
   const [confirmPassword, setConfirmPassword] = useState('')
   const [status, setStatus] = useState<{
-    type: string
+    type: 'error' | 'success'
     message: string
   } | null>(null)
-  const searchParams = useSearchParams()
 
-  const success = searchParams.get('success')
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const success = params.get('success')
     if (success) {
       setStatus({ type: 'success', message: success })
     }
-  }, [success])
+  }, [])
 
   const handlePostUsers = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,23 +47,28 @@ export default function UpdatePassword({
       })
       return
     }
-    try {
-      const response = await updateUser({
-        password,
-      })
 
-      if (response.error) {
-        setStatus({ type: 'error', message: response.error })
-        return
+    startTransition(async () => {
+      try {
+        const response = await updateUser({
+          password,
+        })
+
+        if (response.error) {
+          setStatus({ type: 'error', message: response.error })
+          return
+        }
+        if (response.success) {
+          setStatus({ type: 'success', message: response.success })
+        }
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : 'An unexpected error has occurred'
+        setStatus({ type: 'error', message })
       }
-      if (response.success) {
-        setStatus({ type: 'success', message: response.success })
-      }
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'An unexpected error has occured'
-      setStatus({ type: 'error', message })
-    }
+    })
   }
 
   return (
@@ -88,9 +93,9 @@ export default function UpdatePassword({
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="password">Confirm your New Password</Label>
+            <Label htmlFor="confirm-password">Confirm your New Password</Label>
             <Input
-              id="password"
+              id="confirm-password"
               type="password"
               required
               value={confirmPassword}
@@ -101,18 +106,18 @@ export default function UpdatePassword({
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            Reset Password
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? 'Resetting...' : 'Reset Password'}
           </Button>
         </form>
 
-        {status?.type && (
+        {status ? (
           <div
             className={`flex justify-center mt-2 ${status.type === 'error' ? 'text-red-600' : 'text-green-600'}`}
           >
             {status.message}
           </div>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   )

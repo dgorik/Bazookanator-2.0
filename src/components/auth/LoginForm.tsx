@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useTransition } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useState, useTransition, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { cn } from '@/src/utils/utils'
 import { loginSchema } from '@/src/lib/validations/auth'
 import Link from 'next/link'
@@ -26,22 +26,23 @@ export default function LoginForm({
   const [password, setPassword] = useState('')
   const [isPending, startTransition] = useTransition()
   const [status, setStatus] = useState<{
-    type: string
+    type: 'error' | 'success'
     message: string
   } | null>(null)
-  const searchParams = useSearchParams()
+
   const router = useRouter()
 
-  const success = searchParams.get('success')
-  const error = searchParams.get('error')
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const success = params.get('success')
+    const error = params.get('error')
+
     if (success) {
       setStatus({ type: 'success', message: success })
-    }
-    if (error) {
+    } else if (error) {
       setStatus({ type: 'error', message: error })
     }
-  }, [success, error])
+  }, [])
 
   const handlePostUsers = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -126,7 +127,7 @@ export default function LoginForm({
             <Link href="/auth/forgot-password">Forgot Password</Link>
           </Button>
         </form>
-        {status?.type && (
+        {status && (
           <div
             className={`flex justify-center mt-2 ${status.type === 'error' ? 'text-red-600' : 'text-green-600'}`}
           >

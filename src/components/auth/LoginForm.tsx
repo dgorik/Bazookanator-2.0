@@ -127,13 +127,13 @@ export default function LoginForm({
             <Link href="/auth/forgot-password">Forgot Password</Link>
           </Button>
         </form>
-        {status && (
+        {status ? (
           <div
             className={`flex justify-center mt-2 ${status.type === 'error' ? 'text-red-600' : 'text-green-600'}`}
           >
             {status.message}
           </div>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   )

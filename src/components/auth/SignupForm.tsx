@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { cn } from '@/src/utils/utils'
 import { Button } from '@/src/components/ui/buttons/button'
 import {
@@ -20,8 +20,11 @@ export default function SignupForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
-  const [status, setStatus] = useState({ type: '', message: '' })
-  const [loading, setLoading] = useState(false)
+  const [status, setStatus] = useState<{
+    type: 'error' | 'success'
+    message: string
+  } | null>(null)
+  const [isPending, startTransition] = useTransition()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [firstName, setFirstName] = useState('')
@@ -42,43 +45,32 @@ export default function SignupForm({
       return // Stop here, don't call the server
     }
 
-    if (password.length < 6) {
-      setStatus({
-        type: 'error',
-        message: 'Password must be at least 6 characters.',
-      })
-      return
-    }
+    startTransition(async () => {
+      try {
+        const response = await signup(result.data)
 
-    setLoading(true)
-
-    try {
-      const response = await signup(result.data)
-
-      if (response?.error) {
-        setStatus({ type: 'error', message: response.error })
-        return
+        if (response?.error) {
+          setStatus({ type: 'error', message: response.error })
+          return
+        }
+        setStatus({
+          type: 'success',
+          message:
+            'If this email is not registered yet, you’ll receive a confirmation email shortly.',
+        })
+        setEmail('')
+        setPassword('')
+        setFirstName('')
+        setLastName('')
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'An unexpected error occurred'
+        setStatus({ type: 'error', message: message })
       }
-      setStatus({
-        type: 'success',
-        message:
-          'If this email is not registered yet, you’ll receive a confirmation email shortly.',
-      })
-      setEmail('')
-      setPassword('')
-      setFirstName('')
-      setLastName('')
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'An unexpected error occured'
-      setStatus({ type: 'error', message: message })
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   return (
-    // Find line 84 and update the Card:
     <Card className={cn('w-full max-w-md mx-auto', className)} {...props}>
       <CardHeader>
         <CardTitle className="text-2xl">Create an account</CardTitle>
@@ -94,7 +86,7 @@ export default function SignupForm({
                   id="first_name"
                   type="text"
                   value={firstName}
-                  required={true}
+                  required
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Bazooka"
                 />
@@ -105,7 +97,7 @@ export default function SignupForm({
                   id="last_name"
                   type="text"
                   value={lastName}
-                  required={true}
+                  required
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Joe"
                 />
@@ -117,7 +109,7 @@ export default function SignupForm({
                 id="email"
                 type="email"
                 value={email}
-                required={true}
+                required
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="@bazooka-inc.com"
               />
@@ -128,24 +120,24 @@ export default function SignupForm({
                 id="password"
                 type="password"
                 value={password}
-                required={true}
+                required
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full">
-              {loading && <LoadingSpinner size={16} color="blue" />}
-              {loading ? 'Loading...' : 'Create Account'}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending && <LoadingSpinner size={16} color="blue" />}
+              {isPending ? 'Loading...' : 'Create Account'}
             </Button>
           </div>
         </form>
 
-        {status?.type && (
+        {status ? (
           <div
-            className={`flex justify-center mt-2 ${status.type == 'error' ? 'text-red-600' : 'text-green-300'}`}
+            className={`flex justify-center mt-2 ${status.type === 'error' ? 'text-red-600' : 'text-green-600'}`}
           >
             {status.message}
           </div>
-        )}
+        ) : null}
       </CardContent>
     </Card>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { cn } from '@/src/utils/utils'
 import { loginSchema } from '@/src/lib/validations/auth'
@@ -23,8 +23,8 @@ export default function LoginForm({
   ...props
 }: React.ComponentPropsWithoutRef<'div'>) {
   const [email, setEmail] = useState('')
-  const [loading, setLoading] = useState(false)
   const [password, setPassword] = useState('')
+  const [isPending, startTransition] = useTransition()
   const [status, setStatus] = useState<{
     type: string
     message: string
@@ -56,26 +56,25 @@ export default function LoginForm({
       return
     }
 
-    setLoading(true)
     setStatus(null)
-    try {
-      //'await' pauses THIS function, but yields control back to main thread
-      const response = await login(result.data)
-      //Resumes here only when promise resolves
-      if (response.success) {
-        router.push('/analytics')
-        return
+    startTransition(async () => {
+      try {
+        //'await' pauses THIS function, but yields control back to main thread
+        const response = await login(result.data)
+        //Resumes here only when promise resolves
+        if (response.success) {
+          router.push('/analytics')
+          return
+        }
+        if (response?.error) {
+          setStatus({ type: 'error', message: response.error })
+        }
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'An unexpected error occurred'
+        setStatus({ type: 'error', message: message })
       }
-      if (response?.error) {
-        setStatus({ type: 'error', message: response.error })
-      }
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : 'An unexpected error occurred'
-      setStatus({ type: 'error', message: message })
-    } finally {
-      setLoading(false)
-    }
+    })
   }
 
   return (
@@ -116,9 +115,9 @@ export default function LoginForm({
             />
           </div>
 
-          <Button type="submit" className="w-full">
-            {loading && <LoadingSpinner size={16} color="blue" />}
-            {loading ? 'Loading...' : 'Login'}
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending && <LoadingSpinner size={16} color="blue" />}
+            {isPending ? 'Loading...' : 'Login'}
           </Button>
           <Button asChild variant="outline" className="w-full">
             <Link href="/auth/signup">Sign Up</Link>

@@ -2,15 +2,14 @@ import { z } from 'zod'
 
 const COMPANY_DOMAIN = '@bazooka-inc.com'
 
-export const loginSchema = z
-  .object({
-    email: z.string().trim().toLowerCase().email('Please enter a valid email'),
-    password: z.string().min(1, 'Password is required'),
-  })
-  .refine((data) => data.email.endsWith(COMPANY_DOMAIN), {
-    message: `Email must end with ${COMPANY_DOMAIN}`,
-    path: ['email'],
-  })
+export const loginSchema = z.object({
+  email: z.string().trim().toLowerCase().email('Please enter a valid email'),
+  password: z.string().min(1, 'Password is required'),
+})
+// .refine((data) => data.email.endsWith(COMPANY_DOMAIN), {
+//   message: `Email must end with ${COMPANY_DOMAIN}`,
+//   path: ['email'],
+// })
 
 export const signupSchema = z
   .object({

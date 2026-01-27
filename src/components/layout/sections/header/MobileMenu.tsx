@@ -43,10 +43,7 @@ export default function MobileMenu() {
     <div className="lg:hidden">
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
-          <Menu
-            onClick={() => setIsOpen(!isOpen)}
-            className="cursor-pointer lg:hidden"
-          />
+          <Menu className="cursor-pointer lg:hidden" />
         </SheetTrigger>
         <SheetContent side="right" className="w-[250px]">
           <SheetHeader>
@@ -66,14 +63,10 @@ export default function MobileMenu() {
             ))}
 
             <Button asChild className="w-1/2">
-              <Link href="/auth/login" prefetch={false}>
-                Sign In
-              </Link>
+              <Link href="/auth/login">Sign In</Link>
             </Button>
             <Button asChild className="w-1/2">
-              <Link href="/auth/signup" prefetch={false}>
-                Sign Up
-              </Link>
+              <Link href="/auth/signup">Sign Up</Link>
             </Button>
           </div>
         </SheetContent>

@@ -38,7 +38,7 @@ const faqs = [
 
 export default function FAQSection() {
   return (
-    <section className="container mx-auto py-12 md:py-24">
+    <section id="faq" className="container mx-auto py-12 md:py-24">
       <div className="mx-auto max-w-3xl px-4">
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl dark:text-gray-50">

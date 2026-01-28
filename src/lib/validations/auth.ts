@@ -34,6 +34,14 @@ export const userSchema = z.object({
     .optional(),
 })
 
+export const contactFormSchema = z.object({
+  firstName: z.string().min(2, 'First name is required'),
+  lastName: z.string().min(2, 'Last name is required'),
+  email: z.string().email('Please enter a valid email'),
+  message: z.string().min(2, 'Please enter your message'),
+})
+
 export type User = z.infer<typeof userSchema>
 export type LoginCredentials = z.infer<typeof loginSchema>
 export type SignupCredentials = z.infer<typeof signupSchema>
+export type ContactFormInput = z.infer<typeof contactFormSchema>

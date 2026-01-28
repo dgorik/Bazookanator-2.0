@@ -7,7 +7,7 @@ import {
   CardHeader,
 } from '@/src/components/ui/other - shadcn/card'
 import { useForm } from 'react-hook-form'
-import { z } from 'zod'
+import { useState, useTransition } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Form,
@@ -20,17 +20,20 @@ import {
 import { Input } from '@/src/components/ui/other - shadcn/input'
 import { Button } from '@/src/components/ui/buttons/button'
 import { Textarea } from '@/src/components/ui/other - shadcn/textarea'
-
-const formSchema = z.object({
-  firstName: z.string().min(2).max(255),
-  lastName: z.string().min(2).max(255),
-  email: z.string().email(),
-  message: z.string(),
-})
+import { LoadingSpinner } from '@/src/components/ui/loading_spinner/loading_spinner'
+import { contactFormSchema } from '@/src/lib/validations/auth'
+import { ContactFormInput } from '@/src/lib/validations/auth'
+import { sendContactEmail } from '@/src/app/api/send-email/actions'
 
 export default function ContactSection() {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const [isPending, startTransition] = useTransition()
+  const [status, setStatus] = useState<{
+    type: 'success' | 'error'
+    message: string
+  } | null>(null)
+
+  const form = useForm<ContactFormInput>({
+    resolver: zodResolver(contactFormSchema),
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -39,8 +42,25 @@ export default function ContactSection() {
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
+  function onSubmit(data: ContactFormInput) {
+    setStatus(null)
+    startTransition(async () => {
+      try {
+        //'await' pauses THIS function, but yields control back to main thread
+        const response = await sendContactEmail(data)
+        //Resumes here only when promise resolves
+        if (response.success) {
+          setStatus({ type: 'success', message: response.message })
+          form.reset()
+        } else {
+          setStatus({ type: 'error', message: response.message })
+        }
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error ? err.message : 'An unexpected error occurred'
+        setStatus({ type: 'error', message: message })
+      }
+    })
   }
 
   return (
@@ -135,10 +155,18 @@ export default function ContactSection() {
               </div>
 
               <Button className="bg-gradient-to-r from-[#D247BF] to-primary hover:from-pink-500 hover:to-purple-500">
-                Send message
+                {isPending && <LoadingSpinner size={16} color="blue" />}
+                {isPending ? 'Sending...' : 'Send Message'}
               </Button>
             </form>
           </Form>
+          {status ? (
+            <div
+              className={`flex justify-center mt-2 ${status.type === 'error' ? 'text-red-600' : 'text-green-600'}`}
+            >
+              {status.message}
+            </div>
+          ) : null}
         </CardContent>
 
         <CardFooter></CardFooter>

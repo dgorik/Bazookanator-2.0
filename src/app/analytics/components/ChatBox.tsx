@@ -26,6 +26,7 @@ export default function ChatBox() {
   ])
 
   const [inputValue, setInputValue] = useState('')
+  const [isOpen, setIsOpen] = useState(false)
 
   const handleSend = async () => {
     if (!inputValue.trim()) return
@@ -40,7 +41,7 @@ export default function ChatBox() {
     setInputValue('')
 
     try {
-      const response = await fetch('/api/sales/us_consolidated', {
+      const response = await fetch('/api/analytics/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userQuestion: inputValue }),
@@ -68,37 +69,58 @@ export default function ChatBox() {
   }
 
   return (
-    <div className="flex flex-col justify-end-safe">
-      <Card className="flex justify-end">
-        <CardContent className="flex-grow overflow-hidden">
-          <div className="flex flex-col gap-3 p-2">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`max-w-[80%] px-3 py-2 rounded-md text-sm ${
-                  msg.sender === 'user'
-                    ? 'ml-auto bg-blue-100 text-right'
-                    : 'mr-auto bg-gray-100 text-left'
-                }`}
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
+      {isOpen && (
+        <Card className="w-[320px] sm:w-[360px] shadow-xl">
+          <CardContent className="flex max-h-[360px] flex-col overflow-hidden">
+            <div className="flex items-center justify-between border-b px-3 py-2">
+              <span className="text-sm font-medium">Analytics Chat</span>
+              <Button
+                onClick={() => setIsOpen(false)}
+                size="sm"
+                type="button"
+                variant="ghost"
               >
-                {msg.content}
-              </div>
-            ))}
-          </div>
-        </CardContent>
-        <CardFooter className="p-4 pt-0 border-t bg-gray-50">
-          <div className="flex w-full gap-2">
-            <Input
-              placeholder="Type a message..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-            />
-            <Button onClick={handleSend} size="icon" type="button">
-              <Send className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
+                Close
+              </Button>
+            </div>
+            <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-3">
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`max-w-[80%] px-3 py-2 rounded-md text-sm ${
+                    msg.sender === 'user'
+                      ? 'ml-auto bg-blue-100 text-right'
+                      : 'mr-auto bg-gray-100 text-left'
+                  }`}
+                >
+                  {msg.content}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+          <CardFooter className="border-t bg-gray-50 p-3">
+            <div className="flex w-full gap-2">
+              <Input
+                placeholder="Type a message..."
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+              />
+              <Button onClick={handleSend} size="icon" type="button">
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
+      )}
+      <Button
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="h-12 w-12 rounded-full shadow-lg"
+        size="icon"
+        type="button"
+      >
+        <Send className="h-5 w-5" />
+      </Button>
     </div>
   )
 }

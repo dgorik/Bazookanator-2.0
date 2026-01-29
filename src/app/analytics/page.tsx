@@ -4,6 +4,7 @@ import { useCallback, useMemo } from 'react'
 import { useUrlState } from '@/src/hooks/useUrlState'
 import useSWR from 'swr'
 import KPISection from './components/KPISection'
+import ChatBox from './components/ChatBox'
 import BrandValueTargetChart from './components/visuals/BrandValueTargetChart'
 import AnalyticsFilterBar from './components/AnalyticsFilterBar'
 import TimeViewTabs from './components/TimeViewTabs'
@@ -150,122 +151,125 @@ export default function MemberClient() {
   )
 
   return (
-    <section className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
-            Dashboard
-          </h1>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            Sales and growth stats for anonymous inc.
-          </p>
+    <div className="w-full">
+      <section className="space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
+              Dashboard
+            </h1>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              Sales and growth stats for anonymous inc.
+            </p>
+          </div>
+          <TimeViewTabs
+            selectedView={filters.timeView}
+            onViewChange={(view) => updateFilter('timeView', view)}
+          />
         </div>
-        <TimeViewTabs
-          selectedView={filters.timeView}
-          onViewChange={(view) => updateFilter('timeView', view)}
-        />
-      </div>
 
-      <AnalyticsFilterBar
-        configs={[
-          {
-            label: 'Value Measure',
-            value: filters.valueMeasure,
-            options: valueMeasureOptions,
-            onChange: (val) => updateFilter('valueMeasure', val),
-            isLoading: isLoadingMeasures,
-          },
-          {
-            label: 'Value Measure Year',
-            value: filters.valueMeasureYear,
-            options: availableYears,
-            onChange: (val) => updateFilter('valueMeasureYear', val),
-            isLoading: isLoadingYears,
-          },
-          {
-            label: 'Target Measure',
-            value: filters.targetMeasure,
-            options: targetMeasureOptions,
-            onChange: (val) => updateFilter('targetMeasure', val),
-            isLoading: isLoadingMeasures,
-          },
-          {
-            label: 'Target Measure Year',
-            value: filters.targetMeasureYear,
-            options: availableYears,
-            onChange: (val) => updateFilter('targetMeasureYear', val),
-            isLoading: isLoadingYears,
-          },
-        ]}
-        currentTab={filters.timeView}
-      />
-      <div className="space-y-8">
         <AnalyticsFilterBar
           configs={[
             {
-              label: 'Month',
-              value: filters.month,
-              options: addAllOption(ANALYTICS_MONTHS),
-              onChange: (val) => updateFilter('month', val),
-              showOnTabs: ['monthly'],
+              label: 'Value Measure',
+              value: filters.valueMeasure,
+              options: valueMeasureOptions,
+              onChange: (val) => updateFilter('valueMeasure', val),
+              isLoading: isLoadingMeasures,
             },
             {
-              label: 'Location',
-              value: filters.location,
-              options: addAllOption(locations),
-              onChange: (val) => updateFilter('location', val),
-              isLoading: isLoadingLocations,
+              label: 'Value Measure Year',
+              value: filters.valueMeasureYear,
+              options: availableYears,
+              onChange: (val) => updateFilter('valueMeasureYear', val),
+              isLoading: isLoadingYears,
             },
             {
-              label: 'SubBrand',
-              value: filters.brand,
-              options: addAllOption(brands),
-              onChange: (val) => updateFilter('brand', val),
-              isLoading: isLoadingBrands,
+              label: 'Target Measure',
+              value: filters.targetMeasure,
+              options: targetMeasureOptions,
+              onChange: (val) => updateFilter('targetMeasure', val),
+              isLoading: isLoadingMeasures,
             },
             {
-              label: 'Category',
-              value: filters.category,
-              options: addAllOption(categories),
-              onChange: (val) => updateFilter('category', val),
-              isLoading: isLoadingCategories,
-            },
-            {
-              label: 'Divison',
-              value: filters.division,
-              options: addAllOption(divisions),
-              onChange: (val) => updateFilter('division', val),
-              isLoading: isLoadingDivisions,
+              label: 'Target Measure Year',
+              value: filters.targetMeasureYear,
+              options: availableYears,
+              onChange: (val) => updateFilter('targetMeasureYear', val),
+              isLoading: isLoadingYears,
             },
           ]}
           currentTab={filters.timeView}
         />
+        <div className="space-y-8">
+          <AnalyticsFilterBar
+            configs={[
+              {
+                label: 'Month',
+                value: filters.month,
+                options: addAllOption(ANALYTICS_MONTHS),
+                onChange: (val) => updateFilter('month', val),
+                showOnTabs: ['monthly'],
+              },
+              {
+                label: 'Location',
+                value: filters.location,
+                options: addAllOption(locations),
+                onChange: (val) => updateFilter('location', val),
+                isLoading: isLoadingLocations,
+              },
+              {
+                label: 'SubBrand',
+                value: filters.brand,
+                options: addAllOption(brands),
+                onChange: (val) => updateFilter('brand', val),
+                isLoading: isLoadingBrands,
+              },
+              {
+                label: 'Category',
+                value: filters.category,
+                options: addAllOption(categories),
+                onChange: (val) => updateFilter('category', val),
+                isLoading: isLoadingCategories,
+              },
+              {
+                label: 'Divison',
+                value: filters.division,
+                options: addAllOption(divisions),
+                onChange: (val) => updateFilter('division', val),
+                isLoading: isLoadingDivisions,
+              },
+            ]}
+            currentTab={filters.timeView}
+          />
 
-        <KPISection
-          filters={kpiFilters}
-          targetFilters={kpiTargetFilters}
+          <KPISection
+            filters={kpiFilters}
+            targetFilters={kpiTargetFilters}
+            timeView={filters.timeView}
+          />
+        </div>
+
+        {/* Brand Value vs Target Chart */}
+        <BrandValueTargetChart
+          valueMeasure={filters.valueMeasure}
+          valueMeasureYear={parseInt(filters.valueMeasureYear)}
+          targetMeasure={filters.targetMeasure}
+          targetMeasureYear={parseInt(filters.targetMeasureYear)}
+          filters={{
+            division:
+              filters.division !== ALL_OPTION ? filters.division : undefined,
+            brand: filters.brand !== ALL_OPTION ? filters.brand : undefined,
+            category:
+              filters.category !== ALL_OPTION ? filters.category : undefined,
+            location:
+              filters.location !== ALL_OPTION ? filters.location : undefined,
+            month: filters.month !== ALL_OPTION ? filters.month : undefined,
+          }}
           timeView={filters.timeView}
         />
-      </div>
-
-      {/* Brand Value vs Target Chart */}
-      <BrandValueTargetChart
-        valueMeasure={filters.valueMeasure}
-        valueMeasureYear={parseInt(filters.valueMeasureYear)}
-        targetMeasure={filters.targetMeasure}
-        targetMeasureYear={parseInt(filters.targetMeasureYear)}
-        filters={{
-          division:
-            filters.division !== ALL_OPTION ? filters.division : undefined,
-          brand: filters.brand !== ALL_OPTION ? filters.brand : undefined,
-          category:
-            filters.category !== ALL_OPTION ? filters.category : undefined,
-          location:
-            filters.location !== ALL_OPTION ? filters.location : undefined,
-          month: filters.month !== ALL_OPTION ? filters.month : undefined,
-        }}
-        timeView={filters.timeView}
-      />
-    </section>
+      </section>
+      <ChatBox />
+    </div>
   )
 }

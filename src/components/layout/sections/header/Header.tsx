@@ -43,14 +43,10 @@ export default function Header() {
       {/* <!-- Mobile --> */}
       <div className="hidden lg:flex gap-2">
         <Button asChild>
-          <Link href="/auth/login" prefetch={false}>
-            Sign In
-          </Link>
+          <Link href="/auth/login">Sign In</Link>
         </Button>
         <Button asChild>
-          <Link href="/auth/signup" prefetch={false}>
-            Sign Up
-          </Link>
+          <Link href="/auth/signup">Sign Up</Link>
         </Button>
       </div>
     </header>

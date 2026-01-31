@@ -8,7 +8,8 @@ import {
 import { Input } from '@/src/components/ui/other - shadcn/input'
 import { Send } from 'lucide-react'
 import { Button } from '@/src/components/ui/buttons/button'
-import { useState } from 'react'
+import { TypingIndicator } from '@/src/app/analytics/components/visuals/TypingIndicator'
+import { useState, useRef, useEffect } from 'react'
 
 interface Message {
   id: string
@@ -27,8 +28,20 @@ export default function ChatBox() {
 
   const [inputValue, setInputValue] = useState('')
   const [isOpen, setIsOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
-  const handleSend = async () => {
+  const scrollToBottom = () => {
+    scrollRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, isLoading])
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault()
+
     if (!inputValue.trim()) return
 
     const userMessage: Message = {
@@ -39,6 +52,7 @@ export default function ChatBox() {
 
     setMessages((prev) => [...prev, userMessage])
     setInputValue('')
+    setIsLoading(true)
 
     try {
       const response = await fetch('/api/analytics/chat', {
@@ -65,6 +79,8 @@ export default function ChatBox() {
           sender: 'bot',
         },
       ])
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -97,19 +113,21 @@ export default function ChatBox() {
                   {msg.content}
                 </div>
               ))}
+              {isLoading && <TypingIndicator />}
+              <div ref={scrollRef} />
             </div>
           </CardContent>
           <CardFooter className="border-t bg-gray-50 p-3">
-            <div className="flex w-full gap-2">
+            <form onSubmit={handleSend} className="flex w-full gap-2">
               <Input
                 placeholder="Type a message..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
               />
-              <Button onClick={handleSend} size="icon" type="button">
+              <Button size="icon" type="submit">
                 <Send className="h-4 w-4" />
               </Button>
-            </div>
+            </form>
           </CardFooter>
         </Card>
       )}

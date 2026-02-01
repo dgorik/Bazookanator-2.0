@@ -42,10 +42,10 @@ export default function ChatBox() {
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!inputValue.trim()) return
+    if (!inputValue.trim() || isLoading) return
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: crypto.randomUUID(),
       content: inputValue,
       sender: 'user',
     }
@@ -64,7 +64,7 @@ export default function ChatBox() {
       const data = await response.json()
 
       const botReply: Message = {
-        id: (Date.now() + 1).toString(),
+        id: crypto.randomUUID(),
         content: data.summary || 'Sorry, I didn’t catch that.',
         sender: 'bot',
       }
@@ -74,7 +74,7 @@ export default function ChatBox() {
       setMessages((prev) => [
         ...prev,
         {
-          id: (Date.now() + 1).toString(),
+          id: crypto.randomUUID(),
           content: 'Something went wrong. Please try again.',
           sender: 'bot',
         },
@@ -124,7 +124,11 @@ export default function ChatBox() {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
               />
-              <Button size="icon" type="submit">
+              <Button
+                size="icon"
+                type="submit"
+                disabled={!inputValue.trim() || isLoading}
+              >
                 <Send className="h-4 w-4" />
               </Button>
             </form>

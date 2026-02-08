@@ -73,7 +73,7 @@ type FormatterFunctions = {
 export const formatters: FormatterFunctions = {
   currency: ({
     number,
-    maxFractionDigits = 2,
+    maxFractionDigits,
     currency = 'USD',
   }: CurrencyParams): string => {
     return new Intl.NumberFormat('en-US', {

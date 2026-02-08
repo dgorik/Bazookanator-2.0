@@ -26,10 +26,10 @@ export default function KPICard({
   const percentage = target !== 0 ? (value / target) * 100 : 0
   const formattedValue = valueFormatter
     ? valueFormatter(value)
-    : formatters.currency({ number: value, maxFractionDigits: 0 })
+    : formatters.compactCurrency({ number: value, maxFractionDigits: 1 })
   const formattedTarget = valueFormatter
     ? valueFormatter(target)
-    : formatters.currency({ number: target, maxFractionDigits: 0 })
+    : formatters.compactCurrency({ number: target, maxFractionDigits: 1 })
 
   return (
     <Card
@@ -80,8 +80,8 @@ export default function KPICard({
           </div>
 
           {/* Labels */}
-          <div className="flex items-center">
-            <div className="flex flex-col">
+          <div className="flex flex-row justify-between">
+            <div className="flex flex-col justify-center">
               <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Actual
               </span>
@@ -89,7 +89,7 @@ export default function KPICard({
                 {formattedValue}
               </span>
             </div>
-            <div className="flex flex-col items-end">
+            <div className="flex flex-col justify-center">
               <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
                 Target
               </span>

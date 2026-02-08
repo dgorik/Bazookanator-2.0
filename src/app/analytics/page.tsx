@@ -16,7 +16,7 @@ import {
 import {
   DEFAULT_MEASURES,
   ANALYTICS_MONTHS,
-  DEFAULT_YEARS,
+  // DEFAULT_YEARS,
 } from '@/src/data/filter_data'
 
 const ALL_OPTION = 'All'
@@ -72,10 +72,10 @@ export default function MemberClient() {
     ['filter-options', 'measures'],
     () => getFilterOptions('measures'),
   )
-  const { data: dbYears, isLoading: isLoadingYears } = useSWR(
-    ['filter-options', 'year'],
-    () => getFilterOptions('year'),
-  )
+  // const { data: dbYears, isLoading: isLoadingYears } = useSWR(
+  //   ['filter-options', 'year'],
+  //   () => getFilterOptions('year'),
+  // )
   const { data: divisions, isLoading: isLoadingDivisions } = useSWR(
     ['filter-options', 'division'],
     () => getFilterOptions('division'),
@@ -110,10 +110,10 @@ export default function MemberClient() {
     )
   }, [availableMeasures, filters.valueMeasure])
 
-  const availableYears = useMemo(() => {
-    if (!dbYears || dbYears.length === 0) return DEFAULT_YEARS
-    return dbYears.filter(Boolean)
-  }, [dbYears])
+  // const availableYears = useMemo(() => {
+  //   if (!dbYears || dbYears.length === 0) return DEFAULT_YEARS
+  //   return dbYears.filter(Boolean)
+  // }, [dbYears])
 
   const addAllOption = (options: string[] | undefined) => {
     if (!options || options.length === 0) return [ALL_OPTION]
@@ -177,13 +177,13 @@ export default function MemberClient() {
               onChange: (val) => updateFilter('valueMeasure', val),
               isLoading: isLoadingMeasures,
             },
-            {
-              label: 'Value Measure Year',
-              value: filters.valueMeasureYear,
-              options: availableYears,
-              onChange: (val) => updateFilter('valueMeasureYear', val),
-              isLoading: isLoadingYears,
-            },
+            // {
+            //   label: 'Value Measure Year',
+            //   value: filters.valueMeasureYear,
+            //   options: availableYears,
+            //   onChange: (val) => updateFilter('valueMeasureYear', val),
+            //   isLoading: isLoadingYears,
+            // },
             {
               label: 'Target Measure',
               value: filters.targetMeasure,
@@ -191,13 +191,13 @@ export default function MemberClient() {
               onChange: (val) => updateFilter('targetMeasure', val),
               isLoading: isLoadingMeasures,
             },
-            {
-              label: 'Target Measure Year',
-              value: filters.targetMeasureYear,
-              options: availableYears,
-              onChange: (val) => updateFilter('targetMeasureYear', val),
-              isLoading: isLoadingYears,
-            },
+            // {
+            //   label: 'Target Measure Year',
+            //   value: filters.targetMeasureYear,
+            //   options: availableYears,
+            //   onChange: (val) => updateFilter('targetMeasureYear', val),
+            //   isLoading: isLoadingYears,
+            // },
           ]}
           currentTab={filters.timeView}
         />

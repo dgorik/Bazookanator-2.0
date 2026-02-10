@@ -260,24 +260,41 @@ export type Database = {
     }
     Functions: {
       get_filter_options: { Args: { column_name: string }; Returns: string[] }
-      get_sales_by_brand: {
-        Args: {
-          p_category?: string
-          p_division?: string
-          p_location?: string
-          p_month?: string
-          p_target_measure: string
-          p_target_measure_year: number
-          p_time_view?: string
-          p_value_measure: string
-          p_value_measure_year: number
-        }
-        Returns: {
-          brand: string
-          target_measure: number
-          value_measure: number
-        }[]
-      }
+      get_sales_by_brand:
+        | {
+            Args: {
+              p_category?: string
+              p_division?: string
+              p_location?: string
+              p_month?: string
+              p_target_measure: string
+              p_time_view?: string
+              p_value_measure: string
+            }
+            Returns: {
+              brand: string
+              target_measure: number
+              value_measure: number
+            }[]
+          }
+        | {
+            Args: {
+              p_category?: string
+              p_division?: string
+              p_location?: string
+              p_month?: string
+              p_target_measure: string
+              p_target_measure_year: number
+              p_time_view?: string
+              p_value_measure: string
+              p_value_measure_year: number
+            }
+            Returns: {
+              brand: string
+              target_measure: number
+              value_measure: number
+            }[]
+          }
       get_sales_by_filters: {
         Args: {
           p_brand?: string

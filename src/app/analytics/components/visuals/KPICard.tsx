@@ -6,9 +6,9 @@ import { formatters } from '@/src/utils/utils'
 
 interface KPICardProps {
   title: string
-  value: number
-  growth: number
-  target: number
+  value: number | null
+  growth: number | null
+  target: number | null
   valueFormatter?: (value: number) => string
   subtitle?: string
   className?: string
@@ -22,6 +22,62 @@ export default function KPICard({
   valueFormatter,
   className,
 }: KPICardProps) {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'KPICard.tsx:25',
+      message: 'KPICard props received',
+      data: {
+        title,
+        value,
+        growth,
+        target,
+        valueIsNull: value === null,
+        targetIsNull: target === null,
+        growthIsNull: growth === null,
+        valueType: typeof value,
+        targetType: typeof target,
+      },
+      timestamp: Date.now(),
+      hypothesisId: 'D,E',
+    }),
+  }).catch(() => {})
+  // #endregion
+  // Show empty state if no filters selected
+  if (value === null || target === null || growth === null) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'KPICard.tsx:31',
+        message: 'Showing empty state',
+        data: { title, reason: 'value, target, or growth is null' },
+        timestamp: Date.now(),
+        hypothesisId: 'D',
+      }),
+    }).catch(() => {})
+    // #endregion
+    return (
+      <Card className={cn('w-full', className)}>
+        <CardContent>
+          <div className="border-b border-gray-100 px-6 py-4 dark:border-gray-800">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              {title}
+            </h3>
+          </div>
+          <div className="flex h-40 items-center justify-center px-6 py-8">
+            <p className="text-sm text-gray-400 dark:text-gray-500">
+              Select filters to view data
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const isPositive = growth >= 0
   const percentage = target !== 0 ? (value / target) * 100 : 0
   const formattedValue = valueFormatter

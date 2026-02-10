@@ -38,6 +38,24 @@ export const getSalesData = async (
   filters: SalesFilters,
   timeView: TimeView = 'total',
 ) => {
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'fetchers.ts:43',
+      message: 'getSalesData called',
+      data: {
+        filters,
+        timeView,
+        p_measure: filters.measure,
+        p_measureType: typeof filters.measure,
+      },
+      timestamp: Date.now(),
+      hypothesisId: 'A,B,C',
+    }),
+  }).catch(() => {})
+  // #endregion
   const supabase = getSupabaseClient()
   const { data, error } = await supabase.rpc('get_sales_by_filters', {
     p_measure: filters.measure,
@@ -49,6 +67,19 @@ export const getSalesData = async (
     p_time_view: timeView,
   })
   if (error) throw error
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'fetchers.ts:57',
+      message: 'getSalesData result',
+      data: { data, dataType: typeof data, dataIsNull: data === null },
+      timestamp: Date.now(),
+      hypothesisId: 'A,C',
+    }),
+  }).catch(() => {})
+  // #endregion
   return data
 }
 

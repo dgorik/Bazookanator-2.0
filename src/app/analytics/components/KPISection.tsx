@@ -47,6 +47,20 @@ export default function KPISection({
 }: KPISectionProps) {
   const timeLabel = getTimeViewLabel(timeView)
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'KPISection.tsx:48',
+      message: 'Component rendered with filters',
+      data: { filters, targetFilters, timeView },
+      timestamp: Date.now(),
+      hypothesisId: 'B',
+    }),
+  }).catch(() => {})
+  // #endregion
+
   // Create stable filter objects for location-specific queries
   const bosFilters = useMemo(() => ({ ...filters, location: 'BOS' }), [filters])
   const frontFilters = useMemo(
@@ -80,32 +94,166 @@ export default function KPISection({
 
   // Fetch top category with stable key
   const { data: topCategory } = useSWR(
-    createCacheKey('top-category', filters, timeView),
-    () => getTopCategorySales(filters, timeView),
+    createCacheKey('top-category', frontFilters, timeView),
+    () => getTopCategorySales(frontFilters, timeView),
     { revalidateOnFocus: false },
   )
 
   // Fetch top subbrand with stable key
   const { data: topSubBrand } = useSWR(
-    createCacheKey('top-subbrand', filters, timeView),
-    () => getTopSubBrandSales(filters, timeView),
+    createCacheKey('top-subbrand', frontFilters, timeView),
+    () => getTopSubBrandSales(frontFilters, timeView),
     { revalidateOnFocus: false },
   )
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      location: 'KPISection.tsx:95',
+      message: 'Raw SWR data',
+      data: {
+        valueData,
+        targetData,
+        bosData,
+        frontData,
+        valueDataType: typeof valueData,
+        targetDataType: typeof targetData,
+      },
+      timestamp: Date.now(),
+      hypothesisId: 'A,C,D,E',
+    }),
+  }).catch(() => {})
+  // #endregion
+
   // Calculate metrics
   const totalMetrics = useMemo(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'KPISection.tsx:99',
+        message: 'totalMetrics calculation',
+        data: {
+          valueData,
+          targetData,
+          valueIsNull: valueData === null,
+          targetIsNull: targetData === null,
+          valueIsUndefined: valueData === undefined,
+          targetIsUndefined: targetData === undefined,
+        },
+        timestamp: Date.now(),
+        hypothesisId: 'D',
+        runId: 'post-fix',
+      }),
+    }).catch(() => {})
+    // #endregion
+    // If data is null or undefined, return empty state
+    if (valueData == null || targetData == null) {
+      // #region agent log
+      fetch(
+        'http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'KPISection.tsx:104',
+            message: 'Returning null metrics',
+            data: { reason: 'valueData or targetData is null/undefined' },
+            timestamp: Date.now(),
+            hypothesisId: 'D',
+            runId: 'post-fix',
+          }),
+        },
+      ).catch(() => {})
+      // #endregion
+      return { value: null, target: null, growth: null }
+    }
     const val = Number(valueData) || 0
     const tgt = Number(targetData) || 0
     const growth = tgt !== 0 ? ((val - tgt) / tgt) * 100 : 0
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'KPISection.tsx:112',
+        message: 'Computed totalMetrics',
+        data: { val, tgt, growth },
+        timestamp: Date.now(),
+        hypothesisId: 'E',
+        runId: 'post-fix',
+      }),
+    }).catch(() => {})
+    // #endregion
     return { value: val, target: tgt, growth }
   }, [valueData, targetData])
 
   const locationMetrics = useMemo(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'KPISection.tsx:120',
+        message: 'locationMetrics calculation',
+        data: {
+          bosData,
+          frontData,
+          targetData,
+          bosIsNull: bosData === null,
+          frontIsNull: frontData === null,
+        },
+        timestamp: Date.now(),
+        hypothesisId: 'D',
+        runId: 'post-fix',
+      }),
+    }).catch(() => {})
+    // #endregion
+    // If data is null or undefined, return empty state
+    if (bosData == null || frontData == null || targetData == null) {
+      // #region agent log
+      fetch(
+        'http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            location: 'KPISection.tsx:126',
+            message: 'Returning null location metrics',
+            data: {
+              reason: 'bosData, frontData, or targetData is null/undefined',
+            },
+            timestamp: Date.now(),
+            hypothesisId: 'D',
+            runId: 'post-fix',
+          }),
+        },
+      ).catch(() => {})
+      // #endregion
+      return { value: null, target: null, growth: null, bos: null, front: null }
+    }
     const bos = Number(bosData) || 0
     const front = Number(frontData) || 0
     const total = bos + front
     const target = Number(targetData) || 0
     const growth = target !== 0 ? ((total - target) / target) * 100 : 0
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'KPISection.tsx:136',
+        message: 'Computed locationMetrics',
+        data: { bos, front, total, target, growth },
+        timestamp: Date.now(),
+        hypothesisId: 'E',
+        runId: 'post-fix',
+      }),
+    }).catch(() => {})
+    // #endregion
     return {
       value: total,
       target,
@@ -116,8 +264,9 @@ export default function KPISection({
   }, [bosData, frontData, targetData])
 
   const categoryMetrics = useMemo(() => {
-    if (!topCategory) {
-      return { value: 0, target: 0, growth: 0, category: null }
+    // If data is null/undefined or no category, return empty state
+    if (!topCategory || targetData == null) {
+      return { value: null, target: null, growth: null, category: null }
     }
     const val = Number(topCategory.sales) || 0
     const tgt = Number(targetData) || 0
@@ -131,8 +280,9 @@ export default function KPISection({
   }, [topCategory, targetData])
 
   const subBrandMetrics = useMemo(() => {
-    if (!topSubBrand) {
-      return { value: 0, target: 0, growth: 0, subBrand: null }
+    // If data is null/undefined or no subbrand, return empty state
+    if (!topSubBrand || targetData == null) {
+      return { value: null, target: null, growth: null, subBrand: null }
     }
     const val = Number(topSubBrand.sales) || 0
     const tgt = Number(targetData) || 0

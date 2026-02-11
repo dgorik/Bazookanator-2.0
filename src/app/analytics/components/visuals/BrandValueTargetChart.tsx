@@ -12,7 +12,8 @@ import {
   CardTitle,
 } from '@/src/components/ui/other - shadcn/card'
 import {
-  getSalesByBrand,
+  getFilteredBrands,
+  getSalesValueTarget,
   type TimeView,
   type SalesFilters,
 } from '@/src/lib/fetcher/fetchers'
@@ -47,26 +48,55 @@ export default function BrandValueTargetChart({
   description = 'Compare actual sales against targets by brand',
   className,
 }: BrandValueTargetChartProps) {
+  const measuresInvalid =
+    !valueMeasure ||
+    !targetMeasure ||
+    valueMeasure === 'blank' ||
+    targetMeasure === 'blank'
+
   // Fetch sales data grouped by brand
   const { data, isLoading, error } = useSWR(
-    [
-      'sales-by-brand',
-      valueMeasure,
-      valueMeasureYear,
-      targetMeasure,
-      targetMeasureYear,
-      filters,
-      timeView,
-    ],
-    () =>
-      getSalesByBrand(
-        valueMeasure,
-        valueMeasureYear,
-        targetMeasure,
-        targetMeasureYear,
-        filters,
-        timeView,
-      ),
+    !measuresInvalid
+      ? [
+          'sales-by-brand',
+          valueMeasure,
+          valueMeasureYear,
+          targetMeasure,
+          targetMeasureYear,
+          filters,
+          timeView,
+        ]
+      : null,
+    async () => {
+      const brands = filters.brand
+        ? [filters.brand]
+        : await getFilteredBrands({
+            measure: valueMeasure,
+            division: filters.division,
+            category: filters.category,
+            location: filters.location,
+            month: filters.month,
+          })
+
+      const rows = await Promise.all(
+        brands.map(async (brand) => {
+          const row = await getSalesValueTarget(
+            valueMeasure,
+            targetMeasure,
+            { ...filters, brand },
+            timeView,
+          )
+
+          return {
+            brand,
+            value_measure: Number(row?.value_sales ?? 0),
+            target_measure: Number(row?.target_sales ?? 0),
+          }
+        }),
+      )
+
+      return rows
+    },
   )
 
   // Transform data for Tremor BarChart
@@ -192,12 +222,6 @@ export default function BrandValueTargetChart({
       </Card>
     )
   }
-
-  const measuresInvalid =
-    !valueMeasure ||
-    !targetMeasure ||
-    valueMeasure === 'blank' ||
-    targetMeasure === 'blank'
 
   // If measures are not ready / collide, don't render Bars keyed by category
   if (measuresInvalid) {

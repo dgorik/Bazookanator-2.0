@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useUrlState } from '@/src/hooks/useUrlState'
 import useSWR from 'swr'
 import KPISection from './components/KPISection'
@@ -13,49 +13,49 @@ import {
   type TimeView,
   type SalesFilters,
 } from '@/src/lib/fetcher/fetchers'
-import {
-  DEFAULT_MEASURES,
-  ANALYTICS_MONTHS,
-  // DEFAULT_YEARS,
-} from '@/src/data/filter_data'
+import { DEFAULT_MEASURES, ANALYTICS_MONTHS } from '@/src/data/filter_data'
 
 const ALL_OPTION = 'All'
+const BLANK = 'blank'
+
+const initialFilters = {
+  month: ALL_OPTION,
+  division: ALL_OPTION,
+  brand: ALL_OPTION,
+  category: ALL_OPTION,
+  location: ALL_OPTION,
+  valueMeasure: BLANK,
+  targetMeasure: BLANK,
+  valueMeasureYear: BLANK,
+  targetMeasureYear: BLANK,
+  timeView: 'total' as TimeView,
+}
+
+type FiltersState = typeof initialFilters
+
+const serializeFilters = (value: FiltersState) =>
+  encodeURIComponent(JSON.stringify(value))
+
+const deserializeFilters = (value: string): FiltersState => {
+  try {
+    return JSON.parse(decodeURIComponent(value)) as FiltersState
+  } catch {
+    return initialFilters
+  }
+}
+
+const normalizeOption = (value: string) =>
+  value !== ALL_OPTION ? value : undefined
+
+const safeInt = (value: string) => {
+  const n = Number.parseInt(value, 10)
+  return Number.isFinite(n) ? n : 0
+}
+
+const withAllOption = (options?: string[]) =>
+  !options?.length ? [ALL_OPTION] : [ALL_OPTION, ...options.filter(Boolean)]
 
 export default function MemberClient() {
-  const initialFilters = useMemo(
-    () => ({
-      month: ALL_OPTION,
-      division: ALL_OPTION,
-      brand: ALL_OPTION,
-      category: ALL_OPTION,
-      location: ALL_OPTION,
-      valueMeasure: 'blank',
-      targetMeasure: 'blank',
-      valueMeasureYear: 'blank',
-      targetMeasureYear: 'blank',
-      timeView: 'total' as TimeView,
-    }),
-    [],
-  )
-
-  type FiltersState = typeof initialFilters
-
-  const serializeFilters = useCallback(
-    (value: FiltersState) => encodeURIComponent(JSON.stringify(value)),
-    [],
-  )
-
-  const deserializeFilters = useCallback(
-    (value: string) => {
-      try {
-        return JSON.parse(decodeURIComponent(value)) as FiltersState
-      } catch {
-        return initialFilters
-      }
-    },
-    [initialFilters],
-  )
-
   const [filters, setFilter] = useUrlState(
     'filters',
     initialFilters,
@@ -63,76 +63,51 @@ export default function MemberClient() {
     deserializeFilters,
   )
 
-  const updateFilter = (key: keyof typeof filters, value: string) => {
+  const [selectedBrand, setSelectedBrand] = useState<string | undefined>()
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>()
+
+  const updateFilter = (key: keyof FiltersState, value: string) => {
     setFilter((prev) => ({ ...prev, [key]: value }))
   }
 
-  // Fetch filter options
   const { data: dbMeasures, isLoading: isLoadingMeasures } = useSWR(
     ['filter-options', 'measures'],
     () => getFilterOptions('measures'),
   )
-  // const { data: dbYears, isLoading: isLoadingYears } = useSWR(
-  //   ['filter-options', 'year'],
-  //   () => getFilterOptions('year'),
-  // )
   const { data: divisions, isLoading: isLoadingDivisions } = useSWR(
     ['filter-options', 'division'],
     () => getFilterOptions('division'),
-  )
-  const { data: brands, isLoading: isLoadingBrands } = useSWR(
-    ['filter-options', 'brand'],
-    () => getFilterOptions('brand'),
-  )
-  const { data: categories, isLoading: isLoadingCategories } = useSWR(
-    ['filter-options', 'category'],
-    () => getFilterOptions('category'),
   )
   const { data: locations, isLoading: isLoadingLocations } = useSWR(
     ['filter-options', 'location'],
     () => getFilterOptions('location'),
   )
 
-  const availableMeasures = useMemo(() => {
-    if (!dbMeasures || dbMeasures.length === 0) return DEFAULT_MEASURES
-    return dbMeasures.filter(Boolean)
-  }, [dbMeasures])
+  const availableMeasures = useMemo(
+    () => (dbMeasures?.length ? dbMeasures.filter(Boolean) : DEFAULT_MEASURES),
+    [dbMeasures],
+  )
 
-  const valueMeasureOptions = useMemo(() => {
-    return availableMeasures.filter(
-      (measure) => measure != filters.targetMeasure,
-    )
-  }, [availableMeasures, filters.targetMeasure])
+  const valueMeasureOptions = useMemo(
+    () => availableMeasures.filter((m) => m !== filters.targetMeasure),
+    [availableMeasures, filters.targetMeasure],
+  )
 
-  const targetMeasureOptions = useMemo(() => {
-    return availableMeasures.filter(
-      (measure) => measure != filters.valueMeasure,
-    )
-  }, [availableMeasures, filters.valueMeasure])
+  const targetMeasureOptions = useMemo(
+    () => availableMeasures.filter((m) => m !== filters.valueMeasure),
+    [availableMeasures, filters.valueMeasure],
+  )
 
-  // const availableYears = useMemo(() => {
-  //   if (!dbYears || dbYears.length === 0) return DEFAULT_YEARS
-  //   return dbYears.filter(Boolean)
-  // }, [dbYears])
-
-  const addAllOption = (options: string[] | undefined) => {
-    if (!options || options.length === 0) return [ALL_OPTION]
-    return [ALL_OPTION, ...options.filter(Boolean)]
-  }
-
-  // Build filters object for data fetching
-  const kpiFilters: SalesFilters = useMemo(
+  // shared normalized filters for KPI + chart
+  const normalizedFilters = useMemo(
     () => ({
-      measure:
-        filters.valueMeasure !== 'blank' ? filters.valueMeasure : undefined,
-      division: filters.division !== ALL_OPTION ? filters.division : undefined,
-      brand: filters.brand !== ALL_OPTION ? filters.brand : undefined,
-      category: filters.category !== ALL_OPTION ? filters.category : undefined,
-      location: filters.location !== ALL_OPTION ? filters.location : undefined,
-      month: filters.month !== ALL_OPTION ? filters.month : undefined,
+      division: normalizeOption(filters.division),
+      brand: normalizeOption(filters.brand),
+      category: normalizeOption(filters.category),
+      location: normalizeOption(filters.location),
+      month: normalizeOption(filters.month),
     }),
     [
-      filters.valueMeasure,
       filters.division,
       filters.brand,
       filters.category,
@@ -141,13 +116,22 @@ export default function MemberClient() {
     ],
   )
 
+  const kpiFilters: SalesFilters = useMemo(
+    () => ({
+      ...normalizedFilters,
+      measure:
+        filters.valueMeasure !== BLANK ? filters.valueMeasure : undefined,
+    }),
+    [normalizedFilters, filters.valueMeasure],
+  )
+
   const kpiTargetFilters: SalesFilters = useMemo(
     () => ({
-      ...kpiFilters,
+      ...normalizedFilters,
       measure:
-        filters.targetMeasure !== 'blank' ? filters.targetMeasure : undefined,
+        filters.targetMeasure !== BLANK ? filters.targetMeasure : undefined,
     }),
-    [kpiFilters, filters.targetMeasure],
+    [normalizedFilters, filters.targetMeasure],
   )
 
   return (
@@ -168,6 +152,7 @@ export default function MemberClient() {
           />
         </div>
 
+        {/* Measure filters */}
         <AnalyticsFilterBar
           configs={[
             {
@@ -177,13 +162,6 @@ export default function MemberClient() {
               onChange: (val) => updateFilter('valueMeasure', val),
               isLoading: isLoadingMeasures,
             },
-            // {
-            //   label: 'Value Measure Year',
-            //   value: filters.valueMeasureYear,
-            //   options: availableYears,
-            //   onChange: (val) => updateFilter('valueMeasureYear', val),
-            //   isLoading: isLoadingYears,
-            // },
             {
               label: 'Target Measure',
               value: filters.targetMeasure,
@@ -191,84 +169,63 @@ export default function MemberClient() {
               onChange: (val) => updateFilter('targetMeasure', val),
               isLoading: isLoadingMeasures,
             },
-            // {
-            //   label: 'Target Measure Year',
-            //   value: filters.targetMeasureYear,
-            //   options: availableYears,
-            //   onChange: (val) => updateFilter('targetMeasureYear', val),
-            //   isLoading: isLoadingYears,
-            // },
           ]}
           currentTab={filters.timeView}
         />
+
         <div className="space-y-8">
+          {/* Dimension filters + brand/category selectors */}
           <AnalyticsFilterBar
             configs={[
               {
-                label: 'Month',
-                value: filters.month,
-                options: addAllOption(ANALYTICS_MONTHS),
-                onChange: (val) => updateFilter('month', val),
-                showOnTabs: ['monthly'],
+                label: 'Division',
+                value: filters.division,
+                options: withAllOption(divisions),
+                onChange: (val) => updateFilter('division', val),
+                isLoading: isLoadingDivisions,
               },
               {
                 label: 'Location',
                 value: filters.location,
-                options: addAllOption(locations),
+                options: withAllOption(locations),
                 onChange: (val) => updateFilter('location', val),
                 isLoading: isLoadingLocations,
               },
               {
-                label: 'SubBrand',
-                value: filters.brand,
-                options: addAllOption(brands),
-                onChange: (val) => updateFilter('brand', val),
-                isLoading: isLoadingBrands,
-              },
-              {
-                label: 'Category',
-                value: filters.category,
-                options: addAllOption(categories),
-                onChange: (val) => updateFilter('category', val),
-                isLoading: isLoadingCategories,
-              },
-              {
-                label: 'Divison',
-                value: filters.division,
-                options: addAllOption(divisions),
-                onChange: (val) => updateFilter('division', val),
-                isLoading: isLoadingDivisions,
+                label: 'Month',
+                value: filters.month,
+                options: withAllOption(ANALYTICS_MONTHS),
+                onChange: (val) => updateFilter('month', val),
+                showOnTabs: ['monthly'],
               },
             ]}
             currentTab={filters.timeView}
+            filters={kpiFilters}
+            selectedBrand={selectedBrand}
+            selectedCategory={selectedCategory}
+            onBrandChange={setSelectedBrand}
+            onCategoryChange={setSelectedCategory}
           />
 
           <KPISection
             filters={kpiFilters}
             targetFilters={kpiTargetFilters}
+            selectedBrand={selectedBrand}
+            selectedCategory={selectedCategory}
             timeView={filters.timeView}
           />
         </div>
 
-        {/* Brand Value vs Target Chart */}
         <BrandValueTargetChart
           valueMeasure={filters.valueMeasure}
-          valueMeasureYear={parseInt(filters.valueMeasureYear)}
+          valueMeasureYear={safeInt(filters.valueMeasureYear)}
           targetMeasure={filters.targetMeasure}
-          targetMeasureYear={parseInt(filters.targetMeasureYear)}
-          filters={{
-            division:
-              filters.division !== ALL_OPTION ? filters.division : undefined,
-            brand: filters.brand !== ALL_OPTION ? filters.brand : undefined,
-            category:
-              filters.category !== ALL_OPTION ? filters.category : undefined,
-            location:
-              filters.location !== ALL_OPTION ? filters.location : undefined,
-            month: filters.month !== ALL_OPTION ? filters.month : undefined,
-          }}
+          targetMeasureYear={safeInt(filters.targetMeasureYear)}
+          filters={normalizedFilters}
           timeView={filters.timeView}
         />
       </section>
+
       <ChatBox />
     </div>
   )

@@ -253,6 +253,9 @@ export default function AnalyticsDashboard() {
             targetMeasure={targetMeasure}
             filters={normalizedFilters}
             timeView={filters.timeView}
+            selectedBrand={selectedBrand}
+            selectedCategory={selectedCategory}
+            selectedSubBrand={selectedSubBrand}
           />
         </div>
       </section>

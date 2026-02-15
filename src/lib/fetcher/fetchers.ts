@@ -309,10 +309,8 @@ export const getVarianceDrivers = async (
 
 // ---------------------------------------------------------------------------
 // Top div_sub winners / losers
-// NOTE: Requires a `get_top_div_sub_variance` RPC to be created in Supabase.
-// Signature should accept the same filters + p_direction + p_limit and return
-// { div_sub, value_sales, target_sales } rows grouped by div_sub.
-// For now this returns an empty array.
+// Uses `get_top_div_sub_variance` RPC – groups by div_sub, ranks by variance,
+// and returns the top N rows (default 5).
 // ---------------------------------------------------------------------------
 
 export const getTopDivSubVariance = async (
@@ -321,15 +319,40 @@ export const getTopDivSubVariance = async (
   filters: Omit<SalesFilters, 'measure'>,
   timeView: TimeView,
   direction: 'winners' | 'losers',
+  limit = 5,
 ): Promise<VarianceDriverRow[]> => {
-  // TODO: Replace with supabase.rpc('get_top_div_sub_variance', { ... })
-  // once the RPC is created.
-  void valueMeasure
-  void targetMeasure
-  void filters
-  void timeView
-  void direction
-  return []
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase.rpc(
+    'get_top_div_sub_variance',
+    cleanParams({
+      p_value_measure: valueMeasure,
+      p_target_measure: targetMeasure,
+      p_division: filters.division,
+      p_brand: filters.brand,
+      p_category: filters.category,
+      p_sub_brand: filters.sub_brand,
+      p_location: filters.location,
+      p_month: filters.month,
+      p_time_view: timeView,
+      p_direction: direction,
+      p_limit: limit,
+    }),
+  )
+  if (error) throw new Error(`get_top_div_sub_variance: ${error.message}`)
+  return (data || []).map(
+    (row: { div_sub: string; value_sales: number; target_sales: number }) => {
+      const value = Number(row.value_sales ?? 0)
+      const target = Number(row.target_sales ?? 0)
+      const variance = value - target
+      return {
+        group_value: row.div_sub,
+        value_sales: value,
+        target_sales: target,
+        variance_sales: variance,
+        variance_pct: target !== 0 ? (variance / target) * 100 : 0,
+      }
+    },
+  )
 }
 
 // ---------------------------------------------------------------------------

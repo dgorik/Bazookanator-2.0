@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import useSWR from 'swr'
 import { cn, formatters } from '@/src/utils/utils'
 import {
@@ -31,6 +31,9 @@ interface TopDivSubCardProps {
   targetMeasure?: string
   filters: Omit<SalesFilters, 'measure'>
   timeView: TimeView
+  selectedBrand?: string
+  selectedCategory?: string
+  selectedSubBrand?: string
   className?: string
 }
 
@@ -71,9 +74,12 @@ export default function TopDivSubCard({
   targetMeasure,
   filters,
   timeView,
+  selectedBrand,
+  selectedCategory,
+  selectedSubBrand,
   className,
 }: TopDivSubCardProps) {
-  const [direction, setDirection] = useState<Direction>('losers')
+  const [direction, setDirection] = useState<Direction>('winners')
 
   const hasMeasures =
     !!valueMeasure &&
@@ -81,13 +87,24 @@ export default function TopDivSubCard({
     valueMeasure !== 'blank' &&
     targetMeasure !== 'blank'
 
+  // Merge drill selections into the base filters
+  const scopedFilters = useMemo(
+    () => ({
+      ...filters,
+      brand: selectedBrand,
+      category: selectedCategory,
+      sub_brand: selectedSubBrand,
+    }),
+    [filters, selectedBrand, selectedCategory, selectedSubBrand],
+  )
+
   const { data: rows, isLoading } = useSWR(
     hasMeasures
       ? [
           'top-div-sub',
           valueMeasure,
           targetMeasure,
-          filters,
+          scopedFilters,
           timeView,
           direction,
         ]
@@ -96,10 +113,9 @@ export default function TopDivSubCard({
       getTopDivSubVariance(
         valueMeasure as string,
         targetMeasure as string,
-        filters,
+        scopedFilters,
         timeView,
         direction,
-        5,
       ),
     { revalidateOnFocus: false },
   )
@@ -157,8 +173,9 @@ export default function TopDivSubCard({
         ) : !rows || rows.length === 0 ? (
           <div className="flex h-48 items-center justify-center">
             <p className="text-center text-sm text-gray-400 dark:text-gray-500">
-              Requires <code className="text-xs">get_top_div_sub_variance</code>{' '}
-              RPC in Supabase
+              {direction === 'winners'
+                ? 'No winners — all div/subs are at or below target'
+                : 'No losers — all div/subs are at or above target'}
             </p>
           </div>
         ) : (

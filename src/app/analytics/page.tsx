@@ -3,11 +3,13 @@
 import { useMemo, useState } from 'react'
 import { useUrlState } from '@/src/hooks/useUrlState'
 import useSWR from 'swr'
-import KPISection from './components/KPISection'
 import ChatBox from './components/ChatBox'
-import BrandValueTargetChart from './components/visuals/BrandValueTargetChart'
 import AnalyticsFilterBar from './components/AnalyticsFilterBar'
 import TimeViewTabs from './components/TimeViewTabs'
+import HeadlineKPI from './components/HeadlineKPI'
+import DrillChips from './components/DrillChips'
+import VarianceDriversCard from './components/visuals/VarianceDriversCard'
+import TopDivSubCard from './components/visuals/TopDivSubCard'
 import {
   getFilterOptions,
   type TimeView,
@@ -15,19 +17,18 @@ import {
 } from '@/src/lib/fetcher/fetchers'
 import { DEFAULT_MEASURES, ANALYTICS_MONTHS } from '@/src/data/filter_data'
 
+// ---------------------------------------------------------------------------
+// Constants & URL state helpers
+// ---------------------------------------------------------------------------
+
 const ALL_OPTION = 'All'
 const BLANK = 'blank'
 
 const initialFilters = {
   month: ALL_OPTION,
   division: ALL_OPTION,
-  brand: ALL_OPTION,
-  category: ALL_OPTION,
-  location: ALL_OPTION,
   valueMeasure: BLANK,
   targetMeasure: BLANK,
-  valueMeasureYear: BLANK,
-  targetMeasureYear: BLANK,
   timeView: 'total' as TimeView,
 }
 
@@ -47,15 +48,15 @@ const deserializeFilters = (value: string): FiltersState => {
 const normalizeOption = (value: string) =>
   value !== ALL_OPTION ? value : undefined
 
-const safeInt = (value: string) => {
-  const n = Number.parseInt(value, 10)
-  return Number.isFinite(n) ? n : 0
-}
-
 const withAllOption = (options?: string[]) =>
   !options?.length ? [ALL_OPTION] : [ALL_OPTION, ...options.filter(Boolean)]
 
-export default function MemberClient() {
+// ---------------------------------------------------------------------------
+// Page component
+// ---------------------------------------------------------------------------
+
+export default function AnalyticsDashboard() {
+  // ---- Sticky URL filters ----
   const [filters, setFilter] = useUrlState(
     'filters',
     initialFilters,
@@ -63,39 +64,54 @@ export default function MemberClient() {
     deserializeFilters,
   )
 
-  const [selectedBrand, setSelectedBrand] = useState<string | undefined>()
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>()
-  const [selectedLocation, setSelectedLocation] = useState<string | undefined>()
-
-  const setLocationWaterfall = (location: string | undefined) => {
-    setSelectedLocation(location)
-    setSelectedBrand(undefined)
-    setSelectedCategory(undefined)
-  }
-
-  const setBrandWaterfall = (brand: string | undefined) => {
-    setSelectedBrand(brand)
-    setSelectedCategory(undefined)
-  }
-
-  const setCategoryWaterfall = (category: string | undefined) => {
-    setSelectedCategory(category)
-  }
-
   const updateFilter = (key: keyof FiltersState, value: string) => {
     setFilter((prev) => ({ ...prev, [key]: value }))
   }
 
-  const resetLocation = () => setLocationWaterfall(undefined)
-  const resetBrand = () => setBrandWaterfall(undefined)
-  const resetCategory = () => setCategoryWaterfall(undefined)
+  // ---- Drill selections (local state) ----
+  const [selectedBrand, setSelectedBrand] = useState<string | undefined>()
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>()
+  const [selectedSubBrand, setSelectedSubBrand] = useState<string | undefined>()
 
-  // const resetAllWaterfall = () => {
-  //   setSelectedLocation(undefined)
-  //   setSelectedBrand(undefined)
-  //   setSelectedCategory(undefined)
-  // }
+  // Waterfall: Brand → Category → Sub-brand
+  const selectBrand = (brand: string) => {
+    setSelectedBrand(brand)
+    setSelectedCategory(undefined)
+    setSelectedSubBrand(undefined)
+  }
 
+  const selectCategory = (category: string) => {
+    setSelectedCategory(category)
+    setSelectedSubBrand(undefined)
+  }
+
+  const selectSubBrand = (subBrand: string) => {
+    setSelectedSubBrand(subBrand)
+  }
+
+  // Clear actions (remove level + everything below it)
+  const clearBrand = () => {
+    setSelectedBrand(undefined)
+    setSelectedCategory(undefined)
+    setSelectedSubBrand(undefined)
+  }
+
+  const clearCategory = () => {
+    setSelectedCategory(undefined)
+    setSelectedSubBrand(undefined)
+  }
+
+  const clearSubBrand = () => {
+    setSelectedSubBrand(undefined)
+  }
+
+  const clearAllDrill = () => {
+    setSelectedBrand(undefined)
+    setSelectedCategory(undefined)
+    setSelectedSubBrand(undefined)
+  }
+
+  // ---- Filter option fetching ----
   const { data: dbMeasures, isLoading: isLoadingMeasures } = useSWR(
     ['filter-options', 'measures'],
     () => getFilterOptions('measures'),
@@ -120,52 +136,35 @@ export default function MemberClient() {
     [availableMeasures, filters.valueMeasure],
   )
 
-  // shared normalized filters for KPI + chart
-  const normalizedFilters = useMemo(
+  // ---- Normalized filters (All → undefined) shared across components ----
+  const normalizedFilters: Omit<SalesFilters, 'measure'> = useMemo(
     () => ({
       division: normalizeOption(filters.division),
-      brand: normalizeOption(filters.brand),
-      category: normalizeOption(filters.category),
-      location: normalizeOption(filters.location),
       month: normalizeOption(filters.month),
     }),
-    [
-      filters.division,
-      filters.brand,
-      filters.category,
-      filters.location,
-      filters.month,
-    ],
+    [filters.division, filters.month],
   )
 
-  const kpiFilters: SalesFilters = useMemo(
-    () => ({
-      ...normalizedFilters,
-      measure:
-        filters.valueMeasure !== BLANK ? filters.valueMeasure : undefined,
-    }),
-    [normalizedFilters, filters.valueMeasure],
-  )
+  const valueMeasure =
+    filters.valueMeasure !== BLANK ? filters.valueMeasure : undefined
+  const targetMeasure =
+    filters.targetMeasure !== BLANK ? filters.targetMeasure : undefined
 
-  const kpiTargetFilters: SalesFilters = useMemo(
-    () => ({
-      ...normalizedFilters,
-      measure:
-        filters.targetMeasure !== BLANK ? filters.targetMeasure : undefined,
-    }),
-    [normalizedFilters, filters.targetMeasure],
-  )
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
 
   return (
     <div className="w-full">
       <section className="space-y-6">
+        {/* ---- Header ---- */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-50">
               Dashboard
             </h1>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Sales and growth stats for anonymous inc.
+              Sales vs Target — variance analysis
             </p>
           </div>
           <TimeViewTabs
@@ -174,7 +173,7 @@ export default function MemberClient() {
           />
         </div>
 
-        {/* Measure filters */}
+        {/* ---- Filters: Row 1 – Measures ---- */}
         <AnalyticsFilterBar
           configs={[
             {
@@ -195,58 +194,70 @@ export default function MemberClient() {
           currentTab={filters.timeView}
         />
 
-        <div className="space-y-8">
-          {/* Dimension filters + brand/category selectors */}
-          <AnalyticsFilterBar
-            configs={[
-              {
-                label: 'Month',
-                value: filters.month,
-                options: withAllOption(ANALYTICS_MONTHS),
-                onChange: (val) => updateFilter('month', val),
-                showOnTabs: ['monthly'],
-              },
-              {
-                label: 'Division',
-                value: filters.division,
-                options: withAllOption(divisions),
-                onChange: (val) => updateFilter('division', val),
-                isLoading: isLoadingDivisions,
-              },
-            ]}
-            currentTab={filters.timeView}
-            filters={kpiFilters}
-            selectedLocation={selectedLocation}
-            selectedBrand={selectedBrand}
-            selectedCategory={selectedCategory}
-            onLocationChange={setLocationWaterfall}
-            onBrandChange={setBrandWaterfall}
-            onCategoryChange={setCategoryWaterfall}
-          />
+        {/* ---- Filters: Row 2 – Scope ---- */}
+        <AnalyticsFilterBar
+          configs={[
+            {
+              label: 'Month',
+              value: filters.month,
+              options: withAllOption(ANALYTICS_MONTHS),
+              onChange: (val) => updateFilter('month', val),
+              showOnTabs: ['monthly'],
+            },
+            {
+              label: 'Division',
+              value: filters.division,
+              options: withAllOption(divisions),
+              onChange: (val) => updateFilter('division', val),
+              isLoading: isLoadingDivisions,
+            },
+          ]}
+          currentTab={filters.timeView}
+        />
 
-          <KPISection
-            filters={kpiFilters}
-            targetFilters={kpiTargetFilters}
-            selectedLocation={selectedLocation}
-            selectedBrand={selectedBrand}
-            selectedCategory={selectedCategory}
-            onResetLocation={resetLocation}
-            onResetBrand={resetBrand}
-            onResetCategory={resetCategory}
-            timeView={filters.timeView}
-          />
-        </div>
-
-        <BrandValueTargetChart
-          valueMeasure={filters.valueMeasure}
-          valueMeasureYear={safeInt(filters.valueMeasureYear)}
-          targetMeasure={filters.targetMeasure}
-          targetMeasureYear={safeInt(filters.targetMeasureYear)}
+        {/* ---- Headline KPI (single card) ---- */}
+        <HeadlineKPI
+          valueMeasure={valueMeasure}
+          targetMeasure={targetMeasure}
           filters={normalizedFilters}
           timeView={filters.timeView}
         />
+
+        {/* ---- Drill chips ---- */}
+        <DrillChips
+          selectedBrand={selectedBrand}
+          selectedCategory={selectedCategory}
+          selectedSubBrand={selectedSubBrand}
+          onClearBrand={clearBrand}
+          onClearCategory={clearCategory}
+          onClearSubBrand={clearSubBrand}
+          onClearAll={clearAllDrill}
+        />
+
+        {/* ---- Main grid: Variance Drivers (left) + Top 5 div_sub (right) ---- */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
+          <VarianceDriversCard
+            valueMeasure={valueMeasure}
+            targetMeasure={targetMeasure}
+            filters={normalizedFilters}
+            timeView={filters.timeView}
+            selectedBrand={selectedBrand}
+            selectedCategory={selectedCategory}
+            onBrandSelect={selectBrand}
+            onCategorySelect={selectCategory}
+            onSubBrandSelect={selectSubBrand}
+          />
+
+          <TopDivSubCard
+            valueMeasure={valueMeasure}
+            targetMeasure={targetMeasure}
+            filters={normalizedFilters}
+            timeView={filters.timeView}
+          />
+        </div>
       </section>
 
+      {/* ---- Chat assistant (floating) ---- */}
       <ChatBox />
     </div>
   )

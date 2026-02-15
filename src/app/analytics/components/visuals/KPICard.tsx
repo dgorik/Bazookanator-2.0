@@ -24,44 +24,8 @@ export default function KPICard({
   onReset,
   className,
 }: KPICardProps) {
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      location: 'KPICard.tsx:25',
-      message: 'KPICard props received',
-      data: {
-        title,
-        value,
-        growth,
-        target,
-        valueIsNull: value === null,
-        targetIsNull: target === null,
-        growthIsNull: growth === null,
-        valueType: typeof value,
-        targetType: typeof target,
-      },
-      timestamp: Date.now(),
-      hypothesisId: 'D,E',
-    }),
-  }).catch(() => {})
-  // #endregion
   // Show empty state if no filters selected
   if (value === null || target === null || growth === null) {
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/c6b6e430-27ac-4abb-adec-2e56faa46b3e', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'KPICard.tsx:31',
-        message: 'Showing empty state',
-        data: { title, reason: 'value, target, or growth is null' },
-        timestamp: Date.now(),
-        hypothesisId: 'D',
-      }),
-    }).catch(() => {})
-    // #endregion
     return (
       <Card className={cn('w-full', className)}>
         <CardContent>

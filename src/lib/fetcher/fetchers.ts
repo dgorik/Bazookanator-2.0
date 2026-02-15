@@ -51,6 +51,19 @@ export const getSalesValueTarget = async (
   return data && data.length > 0 ? data[0] : null
 }
 
+export const getFilteredLocations = async (filters: Partial<SalesFilters>) => {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase.rpc('get_filtered_locations', {
+    p_measure: filters.measure,
+    p_division: filters.division,
+    p_category: filters.category,
+    p_brand: filters.brand,
+    p_month: filters.month,
+  })
+  if (error) throw error
+  return data?.map((item) => item.location) || []
+}
+
 // Get filtered brand options
 export const getFilteredBrands = async (filters: Partial<SalesFilters>) => {
   const supabase = getSupabaseClient()

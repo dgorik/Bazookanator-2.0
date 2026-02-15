@@ -12,6 +12,7 @@ import {
 interface KPISectionProps {
   filters: SalesFilters
   targetFilters: SalesFilters
+  selectedLocation?: string
   selectedBrand?: string
   selectedCategory?: string
   timeView: TimeView
@@ -54,6 +55,7 @@ function toMetric(row: SalesValueTargetRow | null): Metric {
 export default function KPISection({
   filters,
   targetFilters,
+  selectedLocation,
   selectedBrand,
   selectedCategory,
   timeView,
@@ -86,22 +88,8 @@ export default function KPISection({
     { revalidateOnFocus: false },
   )
 
-  const { data: bosRow } = useSWR(
-    hasMeasures
-      ? ['kpi-location-bos', valueMeasure, targetMeasure, baseFilters, timeView]
-      : null,
-    () =>
-      getSalesValueTarget(
-        valueMeasure as string,
-        targetMeasure as string,
-        { ...baseFilters, location: 'BOS' },
-        timeView,
-      ) as Promise<SalesValueTargetRow | null>,
-    { revalidateOnFocus: false },
-  )
-
-  const { data: frontRow } = useSWR(
-    hasMeasures
+  const { data: locationRow } = useSWR(
+    hasMeasures && selectedLocation
       ? [
           'kpi-location-front',
           valueMeasure,
@@ -164,15 +152,10 @@ export default function KPISection({
 
   const totalMetrics = useMemo(() => toMetric(totalRow ?? null), [totalRow])
 
-  const locationMetrics = useMemo(() => {
-    if (!bosRow || !frontRow) return EMPTY_METRIC
-    const value =
-      Number(bosRow.value_sales ?? 0) + Number(frontRow.value_sales ?? 0)
-    const target =
-      Number(bosRow.target_sales ?? frontRow.target_sales ?? 0) || 0
-    const growth = target !== 0 ? ((value - target) / target) * 100 : 0
-    return { value, target, growth }
-  }, [bosRow, frontRow])
+  const locationMetrics = useMemo(
+    () => (selectedLocation ? toMetric(locationRow ?? null) : EMPTY_METRIC),
+    [selectedLocation, locationRow],
+  )
 
   const brandMetrics = useMemo(
     () => (selectedBrand ? toMetric(brandRow ?? null) : EMPTY_METRIC),

@@ -65,6 +65,7 @@ export default function MemberClient() {
 
   const [selectedBrand, setSelectedBrand] = useState<string | undefined>()
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>()
+  const [selectedLocation, setSelectedLocation] = useState<string | undefined>()
 
   const updateFilter = (key: keyof FiltersState, value: string) => {
     setFilter((prev) => ({ ...prev, [key]: value }))
@@ -77,10 +78,6 @@ export default function MemberClient() {
   const { data: divisions, isLoading: isLoadingDivisions } = useSWR(
     ['filter-options', 'division'],
     () => getFilterOptions('division'),
-  )
-  const { data: locations, isLoading: isLoadingLocations } = useSWR(
-    ['filter-options', 'location'],
-    () => getFilterOptions('location'),
   )
 
   const availableMeasures = useMemo(
@@ -178,31 +175,26 @@ export default function MemberClient() {
           <AnalyticsFilterBar
             configs={[
               {
-                label: 'Division',
-                value: filters.division,
-                options: withAllOption(divisions),
-                onChange: (val) => updateFilter('division', val),
-                isLoading: isLoadingDivisions,
-              },
-              {
-                label: 'Location',
-                value: filters.location,
-                options: withAllOption(locations),
-                onChange: (val) => updateFilter('location', val),
-                isLoading: isLoadingLocations,
-              },
-              {
                 label: 'Month',
                 value: filters.month,
                 options: withAllOption(ANALYTICS_MONTHS),
                 onChange: (val) => updateFilter('month', val),
                 showOnTabs: ['monthly'],
               },
+              {
+                label: 'Division',
+                value: filters.division,
+                options: withAllOption(divisions),
+                onChange: (val) => updateFilter('division', val),
+                isLoading: isLoadingDivisions,
+              },
             ]}
             currentTab={filters.timeView}
             filters={kpiFilters}
+            selectedLocation={selectedLocation}
             selectedBrand={selectedBrand}
             selectedCategory={selectedCategory}
+            onLocationChange={setSelectedLocation}
             onBrandChange={setSelectedBrand}
             onCategoryChange={setSelectedCategory}
           />
@@ -210,6 +202,7 @@ export default function MemberClient() {
           <KPISection
             filters={kpiFilters}
             targetFilters={kpiTargetFilters}
+            selectedLocation={selectedLocation}
             selectedBrand={selectedBrand}
             selectedCategory={selectedCategory}
             timeView={filters.timeView}

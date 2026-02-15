@@ -5,6 +5,7 @@ import useSWR from 'swr'
 import {
   getFilteredBrands,
   getFilteredCategories,
+  getFilteredLocations,
   type TimeView,
   type SalesFilters,
 } from '@/src/lib/fetcher/fetchers'
@@ -30,8 +31,10 @@ interface AnalyticsFilterBarProps {
   configs: FilterConfig[]
   currentTab: TimeView
   filters?: SalesFilters
+  selectedLocation?: string
   selectedBrand?: string
   selectedCategory?: string
+  onLocationChange?: (location: string | undefined) => void
   onBrandChange?: (brand: string | undefined) => void
   onCategoryChange?: (category: string | undefined) => void
 }
@@ -40,8 +43,10 @@ export default function AnalyticsFilterBar({
   configs,
   currentTab,
   filters,
+  selectedLocation,
   selectedBrand,
   selectedCategory,
+  onLocationChange,
   onBrandChange,
   onCategoryChange,
 }: AnalyticsFilterBarProps) {
@@ -49,22 +54,33 @@ export default function AnalyticsFilterBar({
     (config) => !config.showOnTabs || config.showOnTabs.includes(currentTab),
   )
 
-  const shouldShowBrandCategory =
-    !!filters && !!onBrandChange && !!onCategoryChange
+  const shouldShowBrandCategoryLocation =
+    !!filters && !!onBrandChange && !!onCategoryChange && !!!!onLocationChange
+
+  const { data: availableLocations } = useSWR(
+    shouldShowBrandCategoryLocation && filters.measure
+      ? ['filtered-location', filters]
+      : null,
+    () => getFilteredLocations(filters!),
+  )
 
   const { data: availableBrands } = useSWR(
-    shouldShowBrandCategory && filters.measure
+    shouldShowBrandCategoryLocation && filters.measure
       ? ['filtered-brands', filters]
       : null,
     () => getFilteredBrands(filters!),
   )
 
   const { data: availableCategories } = useSWR(
-    shouldShowBrandCategory && filters.measure
+    shouldShowBrandCategoryLocation && filters.measure
       ? ['filtered-categories', filters, selectedBrand]
       : null,
     () => getFilteredCategories({ ...filters!, brand: selectedBrand }),
   )
+
+  const handleLocationChange = (value: string) => {
+    onLocationChange?.(value || undefined)
+  }
 
   const handleBrandChange = (value: string) => {
     onBrandChange?.(value || undefined)
@@ -90,9 +106,27 @@ export default function AnalyticsFilterBar({
         </div>
       ))}
 
-      {shouldShowBrandCategory && (
+      {shouldShowBrandCategoryLocation && (
         <>
           <div className="hidden h-6 w-px bg-gray-200 dark:bg-gray-800 sm:block" />
+          <div className="min-w-[180px]">
+            <Select
+              value={selectedLocation ?? ''}
+              onValueChange={handleLocationChange}
+              disabled={!filters?.measure}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Location" />
+              </SelectTrigger>
+              <SelectContent>
+                {(availableLocations ?? []).map((location: string) => (
+                  <SelectItem key={location} value={location}>
+                    {location}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <div className="min-w-[180px]">
             <Select

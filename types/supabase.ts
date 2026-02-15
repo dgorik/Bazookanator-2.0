@@ -388,6 +388,26 @@ export type Database = {
           sales: number
         }[]
       }
+      get_top_div_sub_variance: {
+        Args: {
+          p_brand?: string
+          p_category?: string
+          p_direction?: string
+          p_division?: string
+          p_limit?: number
+          p_location?: string
+          p_month?: string
+          p_sub_brand?: string
+          p_target_measure: string
+          p_time_view?: string
+          p_value_measure: string
+        }
+        Returns: {
+          div_sub: string
+          target_sales: number
+          value_sales: number
+        }[]
+      }
       get_top_subbrand_sales: {
         Args: {
           p_brand?: string
@@ -402,26 +422,6 @@ export type Database = {
         Returns: {
           sales: number
           sub_brand: string
-        }[]
-      }
-      get_top_div_sub_variance: {
-        Args: {
-          p_value_measure: string
-          p_target_measure: string
-          p_division?: string
-          p_brand?: string
-          p_category?: string
-          p_sub_brand?: string
-          p_location?: string
-          p_month?: string
-          p_time_view?: string
-          p_direction?: string
-          p_limit?: number
-        }
-        Returns: {
-          div_sub: string
-          value_sales: number
-          target_sales: number
         }[]
       }
     }

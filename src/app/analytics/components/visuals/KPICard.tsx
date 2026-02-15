@@ -10,6 +10,7 @@ interface KPICardProps {
   growth: number | null
   target: number | null
   valueFormatter?: (value: number) => string
+  onReset?: () => void
   subtitle?: string
   className?: string
 }
@@ -20,6 +21,7 @@ export default function KPICard({
   growth,
   target,
   valueFormatter,
+  onReset,
   className,
 }: KPICardProps) {
   // #region agent log
@@ -97,21 +99,35 @@ export default function KPICard({
     >
       <CardContent>
         {/* Header with title and growth badge */}
-        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4 dark:border-gray-800">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-            {title}
-          </h3>
-          <div
-            className={cn(
-              'flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold',
-              isPositive
-                ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400'
-                : 'bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400',
-            )}
-          >
-            <span>{percentage.toFixed(1)}%</span>
+        <section className="relative items-center justify-between border-b border-gray-100 py-2 dark:border-gray-800">
+          <div className="flex justify-between py-6">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              {title}
+            </h3>
+            <div
+              className={cn(
+                'flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold',
+                isPositive
+                  ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400'
+                  : 'bg-red-50 text-red-600 dark:bg-red-950/50 dark:text-red-400',
+              )}
+            >
+              <span>{percentage.toFixed(1)}%</span>
+            </div>
           </div>
-        </div>
+
+          <div>
+            {onReset && (
+              <button
+                type="button"
+                onClick={onReset}
+                className="absolute right-1 -top-2 rounded-md px-2 text-xs font-semibold text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-50"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </section>
 
         {/* Main value */}
         <div className="px-3 py-5">

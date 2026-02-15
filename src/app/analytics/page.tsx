@@ -67,9 +67,34 @@ export default function MemberClient() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>()
   const [selectedLocation, setSelectedLocation] = useState<string | undefined>()
 
+  const setLocationWaterfall = (location: string | undefined) => {
+    setSelectedLocation(location)
+    setSelectedBrand(undefined)
+    setSelectedCategory(undefined)
+  }
+
+  const setBrandWaterfall = (brand: string | undefined) => {
+    setSelectedBrand(brand)
+    setSelectedCategory(undefined)
+  }
+
+  const setCategoryWaterfall = (category: string | undefined) => {
+    setSelectedCategory(category)
+  }
+
   const updateFilter = (key: keyof FiltersState, value: string) => {
     setFilter((prev) => ({ ...prev, [key]: value }))
   }
+
+  const resetLocation = () => setLocationWaterfall(undefined)
+  const resetBrand = () => setBrandWaterfall(undefined)
+  const resetCategory = () => setCategoryWaterfall(undefined)
+
+  // const resetAllWaterfall = () => {
+  //   setSelectedLocation(undefined)
+  //   setSelectedBrand(undefined)
+  //   setSelectedCategory(undefined)
+  // }
 
   const { data: dbMeasures, isLoading: isLoadingMeasures } = useSWR(
     ['filter-options', 'measures'],
@@ -194,9 +219,9 @@ export default function MemberClient() {
             selectedLocation={selectedLocation}
             selectedBrand={selectedBrand}
             selectedCategory={selectedCategory}
-            onLocationChange={setSelectedLocation}
-            onBrandChange={setSelectedBrand}
-            onCategoryChange={setSelectedCategory}
+            onLocationChange={setLocationWaterfall}
+            onBrandChange={setBrandWaterfall}
+            onCategoryChange={setCategoryWaterfall}
           />
 
           <KPISection
@@ -205,6 +230,9 @@ export default function MemberClient() {
             selectedLocation={selectedLocation}
             selectedBrand={selectedBrand}
             selectedCategory={selectedCategory}
+            onResetLocation={resetLocation}
+            onResetBrand={resetBrand}
+            onResetCategory={resetCategory}
             timeView={filters.timeView}
           />
         </div>

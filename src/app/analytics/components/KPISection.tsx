@@ -17,6 +17,9 @@ interface KPISectionProps {
   selectedCategory?: string
   timeView: TimeView
   className?: string
+  onResetLocation?: () => void
+  onResetBrand?: () => void
+  onResetCategory?: () => void
 }
 
 type SalesValueTargetRow = {
@@ -58,6 +61,9 @@ export default function KPISection({
   selectedLocation,
   selectedBrand,
   selectedCategory,
+  onResetLocation,
+  onResetBrand,
+  onResetCategory,
   timeView,
   className,
 }: KPISectionProps) {
@@ -91,10 +97,11 @@ export default function KPISection({
   const { data: locationRow } = useSWR(
     hasMeasures && selectedLocation
       ? [
-          'kpi-location-front',
+          'kpi-location',
           valueMeasure,
           targetMeasure,
           baseFilters,
+          selectedLocation,
           timeView,
         ]
       : null,
@@ -102,7 +109,7 @@ export default function KPISection({
       getSalesValueTarget(
         valueMeasure as string,
         targetMeasure as string,
-        { ...baseFilters, location: 'Front' },
+        { ...baseFilters, location: 'selectedLocation' },
         timeView,
       ) as Promise<SalesValueTargetRow | null>,
     { revalidateOnFocus: false },
@@ -183,6 +190,7 @@ export default function KPISection({
         value={locationMetrics.value}
         target={locationMetrics.target}
         growth={locationMetrics.growth}
+        onReset={selectedLocation ? onResetLocation : undefined}
       />
 
       <KPICard
@@ -190,6 +198,7 @@ export default function KPISection({
         value={brandMetrics.value}
         target={brandMetrics.target}
         growth={brandMetrics.growth}
+        onReset={selectedBrand ? onResetBrand : undefined}
       />
 
       <KPICard
@@ -197,6 +206,7 @@ export default function KPISection({
         value={categoryMetrics.value}
         target={categoryMetrics.target}
         growth={categoryMetrics.growth}
+        onReset={selectedCategory ? onResetCategory : undefined}
       />
     </div>
   )

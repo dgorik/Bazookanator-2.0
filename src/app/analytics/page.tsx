@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useReducer } from 'react'
 import { useUrlState } from '@/src/hooks/useUrlState'
 import useSWR from 'swr'
 import ChatBox from './components/ChatBox'
@@ -27,15 +27,37 @@ const BLANK = 'blank'
 const initialFilters = {
   month: ALL_OPTION,
   division: ALL_OPTION,
-  valueMeasure: BLANK,
-  targetMeasure: BLANK,
+  valueMeasure: '2025 Plan V4',
+  targetMeasure: '2024 Actuals V2',
   timeView: 'total' as TimeView,
 }
 
 type FiltersState = typeof initialFilters
 
-const serializeFilters = (value: FiltersState) =>
-  encodeURIComponent(JSON.stringify(value))
+type DrillDownState = {
+  selectedBrand?: string
+  selectedCategory?: string
+  selectedSubBrand?: string
+}
+
+const InitialDrillDownState: DrillDownState = {
+  selectedBrand: undefined,
+  selectedCategory: undefined,
+  selectedSubBrand: undefined,
+}
+
+type Action =
+  | { type: 'SELECT_BRAND'; payload: string }
+  | { type: 'SELECT_CATEGORY'; payload: string }
+  | { type: 'SELECT_SUBBRAND'; payload: string }
+  | { type: 'CLEAR_BRAND' }
+  | { type: 'CLEAR_CATEGORY' }
+  | { type: 'CLEAR_SUBBRAND' }
+  | { type: 'CLEAR_ALL' }
+
+const serializeFilters = (value: FiltersState) => {
+  return encodeURIComponent(JSON.stringify(value)) //here we are converting a string into an URL
+}
 
 const deserializeFilters = (value: string): FiltersState => {
   try {
@@ -43,7 +65,7 @@ const deserializeFilters = (value: string): FiltersState => {
   } catch {
     return initialFilters
   }
-}
+} //here we are converting URl back into original value
 
 const normalizeOption = (value: string) =>
   value !== ALL_OPTION ? value : undefined
@@ -51,6 +73,47 @@ const normalizeOption = (value: string) =>
 const withAllOption = (options?: string[]) =>
   !options?.length ? [ALL_OPTION] : [ALL_OPTION, ...options.filter(Boolean)]
 
+const drillDownReducer = (state: DrillDownState, action: Action) => {
+  switch (action.type) {
+    case 'SELECT_BRAND':
+      return {
+        selectedBrand: action.payload,
+        selectedCategory: undefined,
+        selectedSubBrand: undefined,
+      }
+    case 'SELECT_CATEGORY':
+      return {
+        ...state,
+        selectedCategory: action.payload,
+        selectedSubBrand: undefined,
+      }
+    case 'SELECT_SUBBRAND':
+      return {
+        ...state,
+        selectedSubBrand: action.payload,
+      }
+    case 'CLEAR_BRAND':
+    case 'CLEAR_ALL':
+      return {
+        selectedBrand: undefined,
+        selectedCategory: undefined,
+        selectedSubBrand: undefined,
+      }
+    case 'CLEAR_CATEGORY':
+      return {
+        ...state,
+        selectedCategory: undefined,
+        selectedSubBrand: undefined,
+      }
+    case 'CLEAR_SUBBRAND':
+      return {
+        ...state,
+        selectedSubBrand: undefined,
+      }
+    default:
+      return state
+  }
+}
 // ---------------------------------------------------------------------------
 // Page component
 // ---------------------------------------------------------------------------
@@ -69,47 +132,7 @@ export default function AnalyticsDashboard() {
   }
 
   // ---- Drill selections (local state) ----
-  const [selectedBrand, setSelectedBrand] = useState<string | undefined>()
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>()
-  const [selectedSubBrand, setSelectedSubBrand] = useState<string | undefined>()
-
-  // Waterfall: Brand → Category → Sub-brand
-  const selectBrand = (brand: string) => {
-    setSelectedBrand(brand)
-    setSelectedCategory(undefined)
-    setSelectedSubBrand(undefined)
-  }
-
-  const selectCategory = (category: string) => {
-    setSelectedCategory(category)
-    setSelectedSubBrand(undefined)
-  }
-
-  const selectSubBrand = (subBrand: string) => {
-    setSelectedSubBrand(subBrand)
-  }
-
-  // Clear actions (remove level + everything below it)
-  const clearBrand = () => {
-    setSelectedBrand(undefined)
-    setSelectedCategory(undefined)
-    setSelectedSubBrand(undefined)
-  }
-
-  const clearCategory = () => {
-    setSelectedCategory(undefined)
-    setSelectedSubBrand(undefined)
-  }
-
-  const clearSubBrand = () => {
-    setSelectedSubBrand(undefined)
-  }
-
-  const clearAllDrill = () => {
-    setSelectedBrand(undefined)
-    setSelectedCategory(undefined)
-    setSelectedSubBrand(undefined)
-  }
+  const [state, dispatch] = useReducer(drillDownReducer, InitialDrillDownState)
 
   // ---- Filter option fetching ----
   const { data: dbMeasures, isLoading: isLoadingMeasures } = useSWR(
@@ -225,37 +248,42 @@ export default function AnalyticsDashboard() {
 
         {/* ---- Drill chips ---- */}
         <DrillChips
-          selectedBrand={selectedBrand}
-          selectedCategory={selectedCategory}
-          selectedSubBrand={selectedSubBrand}
-          onClearBrand={clearBrand}
-          onClearCategory={clearCategory}
-          onClearSubBrand={clearSubBrand}
-          onClearAll={clearAllDrill}
+          selectedBrand={state.selectedBrand}
+          selectedCategory={state.selectedCategory}
+          selectedSubBrand={state.selectedSubBrand}
+          onClearBrand={() => dispatch({ type: 'CLEAR_BRAND' })}
+          onClearCategory={() => dispatch({ type: 'CLEAR_CATEGORY' })}
+          onClearSubBrand={() => dispatch({ type: 'CLEAR_SUBBRAND' })}
+          onClearAll={() => dispatch({ type: 'CLEAR_ALL' })}
         />
 
         {/* ---- Main grid: Variance Drivers (left) + Top 5 div_sub (right) ---- */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
+        <div className="flex flex-col md:flex-row gap-2">
           <VarianceDriversCard
             valueMeasure={valueMeasure}
             targetMeasure={targetMeasure}
             filters={normalizedFilters}
             timeView={filters.timeView}
-            selectedBrand={selectedBrand}
-            selectedCategory={selectedCategory}
-            onBrandSelect={selectBrand}
-            onCategorySelect={selectCategory}
-            onSubBrandSelect={selectSubBrand}
+            selectedBrand={state.selectedBrand}
+            selectedCategory={state.selectedCategory}
+            onBrandSelect={(brandValue: string) =>
+              dispatch({ type: 'SELECT_BRAND', payload: brandValue })
+            }
+            onCategorySelect={(categoryValue: string) =>
+              dispatch({ type: 'SELECT_CATEGORY', payload: categoryValue })
+            }
+            onSubBrandSelect={(subbrandValue: string) =>
+              dispatch({ type: 'SELECT_SUBBRAND', payload: subbrandValue })
+            }
           />
-
           <TopDivSubCard
             valueMeasure={valueMeasure}
             targetMeasure={targetMeasure}
             filters={normalizedFilters}
             timeView={filters.timeView}
-            selectedBrand={selectedBrand}
-            selectedCategory={selectedCategory}
-            selectedSubBrand={selectedSubBrand}
+            selectedBrand={state.selectedBrand}
+            selectedCategory={state.selectedCategory}
+            selectedSubBrand={state.selectedSubBrand}
           />
         </div>
       </section>

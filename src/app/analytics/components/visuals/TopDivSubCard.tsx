@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import useSWR from 'swr'
+import { LoadingSpinner } from '@/src/components/ui/loading_spinner/loading_spinner'
 import { cn, formatters } from '@/src/utils/utils'
 import {
   Card,
@@ -161,7 +162,7 @@ export default function TopDivSubCard({
         {isLoading ? (
           <div className="flex h-48 items-center justify-center">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Loading...
+              <LoadingSpinner size={16} color="blue" />
             </p>
           </div>
         ) : !hasMeasures ? (

@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import useSWR from 'swr'
 import { cn, formatters } from '@/src/utils/utils'
+import { LoadingSpinner } from '@/src/components/ui/loading_spinner/loading_spinner'
 import { Card, CardContent } from '@/src/components/ui/other - shadcn/card'
 import {
   getSalesValueTarget,
@@ -62,14 +63,13 @@ function MiniKPI({ title, value, accent = 'neutral' }: MiniKPIProps) {
   )
 }
 
-function MiniKPIEmpty({ title }: { title: string }) {
+function MiniKPIEmpty() {
   return (
     <Card className="w-full border-gray-200 dark:border-gray-800">
       <CardContent>
         <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-          {title}
+          <LoadingSpinner size={16} color="blue" />
         </h3>
-        <div className="mt-2 text-sm text-gray-400 dark:text-gray-500">—</div>
       </CardContent>
     </Card>
   )
@@ -122,10 +122,10 @@ export default function HeadlineKPI({
           className,
         )}
       >
-        <MiniKPIEmpty title={`${timeLabel} Value`} />
-        <MiniKPIEmpty title={`${timeLabel} Target`} />
-        <MiniKPIEmpty title="Variance $" />
-        <MiniKPIEmpty title="Variance %" />
+        <MiniKPIEmpty />
+        <MiniKPIEmpty />
+        <MiniKPIEmpty />
+        <MiniKPIEmpty />
       </div>
     )
   }

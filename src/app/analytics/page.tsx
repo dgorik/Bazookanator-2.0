@@ -10,12 +10,12 @@ import HeadlineKPI from './components/HeadlineKPI'
 import DrillChips from './components/DrillChips'
 import VarianceDriversCard from './components/visuals/VarianceDriversCard'
 import TopDivSubCard from './components/visuals/TopDivSubCard'
+import { ANALYTICS_MONTHS } from '@/src/data/filter_data'
 import {
   getFilterOptions,
   type TimeView,
   type SalesFilters,
 } from '@/src/lib/fetcher/fetchers'
-import { DEFAULT_MEASURES, ANALYTICS_MONTHS } from '@/src/data/filter_data'
 
 // ---------------------------------------------------------------------------
 // Constants & URL state helpers
@@ -23,9 +23,13 @@ import { DEFAULT_MEASURES, ANALYTICS_MONTHS } from '@/src/data/filter_data'
 
 const ALL_OPTION = 'All'
 const BLANK = 'blank'
+const CURRENT_MONTH_INDEX = new Date().getMonth()
+const CURRENT_QUARTER_START_INDEX = Math.floor(CURRENT_MONTH_INDEX / 3) * 3
 
 const initialFilters = {
   month: ALL_OPTION,
+  qtdStartMonth: ANALYTICS_MONTHS[CURRENT_QUARTER_START_INDEX],
+  qtdEndMonth: ANALYTICS_MONTHS[CURRENT_MONTH_INDEX],
   division: ALL_OPTION,
   valueMeasure: '2025 Plan V4',
   targetMeasure: '2024 Actuals V2',
@@ -61,7 +65,30 @@ const serializeFilters = (value: FiltersState) => {
 
 const deserializeFilters = (value: string): FiltersState => {
   try {
-    return JSON.parse(decodeURIComponent(value)) as FiltersState
+    const parsed = JSON.parse(decodeURIComponent(value)) as FiltersState
+    const rawView = (parsed as unknown as { timeView?: string }).timeView
+
+    // Back-compat: older URLs used "quarterly"; map it to QTD.
+    const mappedView = rawView === 'quarterly' ? 'qtd' : rawView
+    const timeView: TimeView =
+      mappedView === 'monthly' ||
+      mappedView === 'qtd' ||
+      mappedView === 'ytd' ||
+      mappedView === 'total'
+        ? mappedView
+        : initialFilters.timeView
+
+    const base = { ...initialFilters, ...parsed, timeView }
+    const startIdx = getMonthIndex(base.qtdStartMonth)
+    const endIdx = getMonthIndex(base.qtdEndMonth)
+
+    if (startIdx === -1) base.qtdStartMonth = initialFilters.qtdStartMonth
+    if (endIdx === -1) base.qtdEndMonth = initialFilters.qtdEndMonth
+    if (getMonthIndex(base.qtdStartMonth) > getMonthIndex(base.qtdEndMonth)) {
+      base.qtdEndMonth = base.qtdStartMonth
+    }
+
+    return base
   } catch {
     return initialFilters
   }
@@ -72,6 +99,9 @@ const normalizeOption = (value: string) =>
 
 const withAllOption = (options?: string[]) =>
   !options?.length ? [ALL_OPTION] : [ALL_OPTION, ...options.filter(Boolean)]
+
+const getMonthIndex = (month?: string) =>
+  month ? ANALYTICS_MONTHS.indexOf(month) : -1
 
 const drillDownReducer = (state: DrillDownState, action: Action) => {
   switch (action.type) {
@@ -131,21 +161,40 @@ export default function AnalyticsDashboard() {
     setFilter((prev) => ({ ...prev, [key]: value }))
   }
 
+  const updateQtdMonth = (
+    key: 'qtdStartMonth' | 'qtdEndMonth',
+    value: string,
+  ) => {
+    setFilter((prev) => {
+      const next = { ...prev, [key]: value }
+      const startIdx = getMonthIndex(next.qtdStartMonth)
+      const endIdx = getMonthIndex(next.qtdEndMonth)
+
+      if (startIdx > endIdx) {
+        if (key === 'qtdStartMonth') next.qtdEndMonth = value
+        else next.qtdStartMonth = value
+      }
+
+      return next
+    })
+  }
+
   // ---- Drill selections (local state) ----
   const [state, dispatch] = useReducer(drillDownReducer, InitialDrillDownState)
 
   // ---- Filter option fetching ----
   const { data: dbMeasures, isLoading: isLoadingMeasures } = useSWR(
     ['filter-options', 'measures'],
-    () => getFilterOptions('measures'),
+    () => getFilterOptions('measure'),
   )
+
   const { data: divisions, isLoading: isLoadingDivisions } = useSWR(
     ['filter-options', 'division'],
     () => getFilterOptions('division'),
   )
 
   const availableMeasures = useMemo(
-    () => (dbMeasures?.length ? dbMeasures.filter(Boolean) : DEFAULT_MEASURES),
+    () => (dbMeasures ?? []).filter(Boolean),
     [dbMeasures],
   )
 
@@ -163,9 +212,15 @@ export default function AnalyticsDashboard() {
   const normalizedFilters: Omit<SalesFilters, 'measure'> = useMemo(
     () => ({
       division: normalizeOption(filters.division),
-      month: normalizeOption(filters.month),
+      // Month is meaningful for monthly and YTD:
+      // - monthly: exact month filter
+      // - ytd: end-boundary month (Jan..selected)
+      month:
+        filters.timeView === 'monthly' || filters.timeView === 'ytd'
+          ? normalizeOption(filters.month)
+          : undefined,
     }),
-    [filters.division, filters.month],
+    [filters.division, filters.month, filters.timeView],
   )
 
   const valueMeasure =
@@ -226,6 +281,27 @@ export default function AnalyticsDashboard() {
               options: withAllOption(ANALYTICS_MONTHS),
               onChange: (val) => updateFilter('month', val),
               showOnTabs: ['monthly'],
+            },
+            {
+              label: 'Through Month',
+              value: filters.month,
+              options: withAllOption(ANALYTICS_MONTHS),
+              onChange: (val) => updateFilter('month', val),
+              showOnTabs: ['ytd'],
+            },
+            {
+              label: 'Start of Quarter Month',
+              value: filters.qtdStartMonth,
+              options: ANALYTICS_MONTHS,
+              onChange: (val) => updateQtdMonth('qtdStartMonth', val),
+              showOnTabs: ['qtd'],
+            },
+            {
+              label: 'End of Quarter Month',
+              value: filters.qtdEndMonth,
+              options: ANALYTICS_MONTHS,
+              onChange: (val) => updateQtdMonth('qtdEndMonth', val),
+              showOnTabs: ['qtd'],
             },
             {
               label: 'Division',

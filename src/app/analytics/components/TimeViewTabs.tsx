@@ -10,7 +10,8 @@ interface TimeViewTabsProps {
 
 const tabs: { id: TimeView; label: string }[] = [
   { id: 'monthly', label: 'Monthly' },
-  { id: 'quarterly', label: 'Quarterly' },
+  { id: 'qtd', label: 'QTD' },
+  { id: 'ytd', label: 'YTD' },
   { id: 'total', label: 'Total' },
 ]
 

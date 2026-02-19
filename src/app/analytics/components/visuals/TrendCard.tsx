@@ -79,9 +79,11 @@ export default function TrendCard({
   const description =
     timeView === 'monthly'
       ? 'Monthly performance comparison'
-      : timeView === 'quarterly'
-        ? 'Quarterly performance comparison'
-        : 'Select Monthly or Quarterly to view trend'
+      : timeView === 'qtd'
+        ? 'Quarter-to-date performance comparison'
+        : timeView === 'ytd'
+          ? 'Year-to-date performance comparison'
+          : 'Select a time view to view trend'
 
   // Total view – no trend available
   if (!canShowTrend) {
@@ -93,7 +95,7 @@ export default function TrendCard({
         </CardHeader>
         <CardContent className="flex h-64 items-center justify-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Switch to Monthly or Quarterly to see the trend over time.
+            Switch to Monthly, QTD, or YTD to see the trend over time.
           </p>
         </CardContent>
       </Card>

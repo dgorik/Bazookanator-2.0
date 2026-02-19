@@ -19,7 +19,7 @@ export interface SalesFilters {
   month?: string
 }
 
-export type TimeView = 'monthly' | 'quarterly' | 'total'
+export type TimeView = 'monthly' | 'qtd' | 'ytd' | 'total'
 
 export type DrillLevel = 'brand' | 'category' | 'sub_brand'
 
@@ -357,7 +357,7 @@ export const getTopDivSubVariance = async (
 
 // ---------------------------------------------------------------------------
 // Trend series – Actual vs Target per period
-// Works for monthly (12 parallel calls). For quarterly/total returns [].
+// Works for monthly/YTD/QTD (parallel calls). For total returns [].
 // ---------------------------------------------------------------------------
 
 const MONTHS = [
@@ -383,7 +383,19 @@ export const getSalesTrend = async (
 ): Promise<TrendDataPoint[]> => {
   if (timeView === 'total') return []
 
-  const periods = MONTHS
+  const selectedMonthIdx = filters.month
+    ? MONTHS.indexOf(filters.month.toUpperCase())
+    : -1
+  const endMonthIdx =
+    selectedMonthIdx >= 0 ? selectedMonthIdx : new Date().getMonth() // 0-11
+  const quarterStartIdx = Math.floor(endMonthIdx / 3) * 3
+
+  const periods =
+    timeView === 'monthly'
+      ? MONTHS
+      : timeView === 'ytd'
+        ? MONTHS.slice(0, endMonthIdx + 1)
+        : MONTHS.slice(quarterStartIdx, endMonthIdx + 1)
 
   const results = await Promise.all(
     periods.map(async (month) => {
@@ -403,22 +415,6 @@ export const getSalesTrend = async (
       }
     }),
   )
-
-  if (timeView === 'quarterly') {
-    const quarters: TrendDataPoint[] = []
-    for (let q = 0; q < 4; q++) {
-      const slice = results.slice(q * 3, q * 3 + 3)
-      const value = slice.reduce((s, r) => s + r.value_sales, 0)
-      const target = slice.reduce((s, r) => s + r.target_sales, 0)
-      quarters.push({
-        period: `Q${q + 1}`,
-        value_sales: value,
-        target_sales: target,
-        variance_sales: value - target,
-      })
-    }
-    return quarters
-  }
 
   return results
 }

@@ -23,8 +23,10 @@ function getTimeViewLabel(timeView: TimeView): string {
   switch (timeView) {
     case 'monthly':
       return 'Monthly'
-    case 'quarterly':
-      return 'Quarterly'
+    case 'qtd':
+      return 'Quarter to date'
+    case 'ytd':
+      return 'YTD'
     case 'total':
     default:
       return 'Total'

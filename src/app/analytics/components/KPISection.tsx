@@ -22,6 +22,8 @@ interface KPISectionProps {
   onResetCategory?: () => void
 }
 
+//hahahah
+
 type SalesValueTargetRow = {
   value_sales: number | null
   target_sales: number | null

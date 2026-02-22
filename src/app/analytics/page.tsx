@@ -1,9 +1,9 @@
 'use client'
 
 import { useMemo, useReducer } from 'react'
+import dynamic from 'next/dynamic'
 import { useUrlState } from '@/src/hooks/useUrlState'
 import useSWR from 'swr'
-import ChatBox from './components/ChatBox'
 import AnalyticsFilterBar from './components/AnalyticsFilterBar'
 import TimeViewTabs from './components/TimeViewTabs'
 import HeadlineKPI from './components/HeadlineKPI'
@@ -20,7 +20,9 @@ import {
 // ---------------------------------------------------------------------------
 // Constants & URL state helpers
 // ---------------------------------------------------------------------------
-
+const ChatBox = dynamic(() => import('./components/ChatBox'), {
+  ssr: false,
+})
 const ALL_OPTION = 'All'
 const BLANK = 'blank'
 const CURRENT_MONTH_INDEX = new Date().getMonth()
@@ -212,15 +214,22 @@ export default function AnalyticsDashboard() {
   const normalizedFilters: Omit<SalesFilters, 'measure'> = useMemo(
     () => ({
       division: normalizeOption(filters.division),
-      // Month is meaningful for monthly and YTD:
-      // - monthly: exact month filter
-      // - ytd: end-boundary month (Jan..selected)
       month:
         filters.timeView === 'monthly' || filters.timeView === 'ytd'
           ? normalizeOption(filters.month)
           : undefined,
+      ...(filters.timeView === 'qtd' && {
+        qtdStartMonth: filters.qtdStartMonth,
+        qtdEndMonth: filters.qtdEndMonth,
+      }),
     }),
-    [filters.division, filters.month, filters.timeView],
+    [
+      filters.division,
+      filters.month,
+      filters.timeView,
+      filters.qtdStartMonth,
+      filters.qtdEndMonth,
+    ],
   )
 
   const valueMeasure =

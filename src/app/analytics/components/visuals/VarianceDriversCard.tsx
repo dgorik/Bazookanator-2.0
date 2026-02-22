@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import useSWR from 'swr'
 import { BarChart } from '@/src/components/ui/tremor/barchart'
+import { LoadingSpinner } from '@/src/components/ui/loading_spinner/loading_spinner'
 import { formatters, cn } from '@/src/utils/utils'
 import {
   Card,
@@ -205,7 +206,7 @@ export default function VarianceDriversCard({
         </CardHeader>
         <CardContent className="flex h-80 items-center justify-center">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Loading data...
+            <LoadingSpinner size={16} color="blue" />
           </p>
         </CardContent>
       </Card>

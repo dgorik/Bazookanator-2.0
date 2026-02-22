@@ -17,6 +17,8 @@ export interface SalesFilters {
   sub_brand?: string
   location?: string
   month?: string
+  qtdStartMonth?: string
+  qtdEndMonth?: string
 }
 
 export type TimeView = 'monthly' | 'qtd' | 'ytd' | 'total'
@@ -55,12 +57,56 @@ export const getFilterOptions = async (columnName: string) => {
 // Headline KPI – single aggregate (existing)
 // ---------------------------------------------------------------------------
 
+const _fetchSVTSingleMonth = async (
+  valueMeasure: string,
+  targetMeasure: string,
+  filters: Omit<SalesFilters, 'measure'>,
+  month: string,
+) => {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase.rpc('get_sales_value_target', {
+    p_value_measure: valueMeasure,
+    p_target_measure: targetMeasure,
+    p_division: filters.division,
+    p_brand: filters.brand,
+    p_category: filters.category,
+    p_sub_brand: filters.sub_brand,
+    p_location: filters.location,
+    p_month: month,
+    p_time_view: 'monthly',
+  })
+  if (error) throw error
+  return data && data.length > 0 ? data[0] : null
+}
+
 export const getSalesValueTarget = async (
   valueMeasure: string,
   targetMeasure: string,
   filters: Omit<SalesFilters, 'measure'>,
   timeView: TimeView = 'total',
 ) => {
+  if (timeView === 'qtd' || timeView === 'ytd') {
+    const months = getMonthRange(filters, timeView)
+    if (!months.length) return null
+
+    const results = await Promise.all(
+      months.map((m) =>
+        _fetchSVTSingleMonth(valueMeasure, targetMeasure, filters, m),
+      ),
+    )
+
+    return {
+      value_sales: results.reduce(
+        (sum, r) => sum + Number(r?.value_sales ?? 0),
+        0,
+      ),
+      target_sales: results.reduce(
+        (sum, r) => sum + Number(r?.target_sales ?? 0),
+        0,
+      ),
+    }
+  }
+
   const supabase = getSupabaseClient()
   const { data, error } = await supabase.rpc('get_sales_value_target', {
     p_value_measure: valueMeasure,
@@ -147,6 +193,63 @@ function cleanParams<T extends Record<string, unknown>>(obj: T): T {
   return out as T
 }
 
+const _fetchBrandsSingleMonth = async (
+  valueMeasure: string,
+  targetMeasure: string,
+  filters: Omit<SalesFilters, 'measure'>,
+  month: string,
+): Promise<{ brand: string; value: number; target: number }[]> => {
+  const supabase = getSupabaseClient()
+  const { data, error } = await supabase.rpc(
+    'get_sales_by_brand',
+    cleanParams({
+      p_value_measure: valueMeasure,
+      p_target_measure: targetMeasure,
+      p_division: filters.division,
+      p_category: filters.category,
+      p_location: filters.location,
+      p_month: month,
+      p_time_view: 'monthly',
+    }),
+  )
+  if (error) throw new Error(`get_sales_by_brand: ${error.message}`)
+  return (data || []).map(
+    (row: {
+      brand: string
+      value_measure: number
+      target_measure: number
+    }) => ({
+      brand: row.brand,
+      value: Number(row.value_measure ?? 0),
+      target: Number(row.target_measure ?? 0),
+    }),
+  )
+}
+
+function mergeGroupedRows(
+  monthlyResults: { key: string; value: number; target: number }[][],
+): VarianceDriverRow[] {
+  const map = new Map<string, { value: number; target: number }>()
+  for (const rows of monthlyResults) {
+    for (const row of rows) {
+      const existing = map.get(row.key) || { value: 0, target: 0 }
+      existing.value += row.value
+      existing.target += row.target
+      map.set(row.key, existing)
+    }
+  }
+  return Array.from(map.entries()).map(([groupValue, { value, target }]) => {
+    const variance = value - target
+    return {
+      group_value: groupValue,
+      value_sales: value,
+      target_sales: target,
+      variance_sales: variance,
+      variance_pct: target !== 0 ? (variance / target) * 100 : 0,
+    }
+  })
+}
+
 /** Brand-level: uses get_sales_by_brand (returns value+target per brand). */
 export const getSalesByBrand = async (
   valueMeasure: string,
@@ -154,6 +257,23 @@ export const getSalesByBrand = async (
   filters: Omit<SalesFilters, 'measure'>,
   timeView: TimeView = 'total',
 ): Promise<VarianceDriverRow[]> => {
+  if (timeView === 'qtd' || timeView === 'ytd') {
+    const months = getMonthRange(filters, timeView)
+    if (!months.length) return []
+
+    const monthlyResults = await Promise.all(
+      months.map((m) =>
+        _fetchBrandsSingleMonth(valueMeasure, targetMeasure, filters, m),
+      ),
+    )
+
+    return mergeGroupedRows(
+      monthlyResults.map((rows) =>
+        rows.map((r) => ({ key: r.brand, value: r.value, target: r.target })),
+      ),
+    )
+  }
+
   const supabase = getSupabaseClient()
   const { data, error } = await supabase.rpc(
     'get_sales_by_brand',
@@ -321,6 +441,53 @@ export const getTopDivSubVariance = async (
   direction: 'winners' | 'losers',
   limit = 5,
 ): Promise<VarianceDriverRow[]> => {
+  if (timeView === 'qtd' || timeView === 'ytd') {
+    const months = getMonthRange(filters, timeView)
+    if (!months.length) return []
+
+    const monthlyResults = await Promise.all(
+      months.map(async (m) => {
+        const supabase = getSupabaseClient()
+        const { data, error } = await supabase.rpc(
+          'get_top_div_sub_variance',
+          cleanParams({
+            p_value_measure: valueMeasure,
+            p_target_measure: targetMeasure,
+            p_division: filters.division,
+            p_brand: filters.brand,
+            p_category: filters.category,
+            p_sub_brand: filters.sub_brand,
+            p_location: filters.location,
+            p_month: m,
+            p_time_view: 'monthly',
+            p_direction: direction,
+            p_limit: 1000,
+          }),
+        )
+        if (error) throw new Error(`get_top_div_sub_variance: ${error.message}`)
+        return (data || []).map(
+          (row: {
+            div_sub: string
+            value_sales: number
+            target_sales: number
+          }) => ({
+            key: row.div_sub,
+            value: Number(row.value_sales ?? 0),
+            target: Number(row.target_sales ?? 0),
+          }),
+        )
+      }),
+    )
+
+    const merged = mergeGroupedRows(monthlyResults)
+    merged.sort((a, b) =>
+      direction === 'winners'
+        ? b.variance_sales - a.variance_sales
+        : a.variance_sales - b.variance_sales,
+    )
+    return merged.slice(0, limit)
+  }
+
   const supabase = getSupabaseClient()
   const { data, error } = await supabase.rpc(
     'get_top_div_sub_variance',
@@ -375,6 +542,29 @@ const MONTHS = [
   'DEC',
 ]
 
+function getMonthRange(
+  filters: Omit<SalesFilters, 'measure'>,
+  timeView: TimeView,
+): string[] {
+  if (timeView === 'ytd') {
+    const endIdx = filters.month
+      ? MONTHS.indexOf(filters.month.toUpperCase())
+      : new Date().getMonth()
+    return endIdx >= 0 ? MONTHS.slice(0, endIdx + 1) : []
+  }
+  if (timeView === 'qtd') {
+    const startIdx = filters.qtdStartMonth
+      ? MONTHS.indexOf(filters.qtdStartMonth.toUpperCase())
+      : -1
+    const endIdx = filters.qtdEndMonth
+      ? MONTHS.indexOf(filters.qtdEndMonth.toUpperCase())
+      : -1
+    if (startIdx < 0 || endIdx < 0 || startIdx > endIdx) return []
+    return MONTHS.slice(startIdx, endIdx + 1)
+  }
+  return []
+}
+
 export const getSalesTrend = async (
   valueMeasure: string,
   targetMeasure: string,
@@ -383,27 +573,21 @@ export const getSalesTrend = async (
 ): Promise<TrendDataPoint[]> => {
   if (timeView === 'total') return []
 
-  const selectedMonthIdx = filters.month
-    ? MONTHS.indexOf(filters.month.toUpperCase())
-    : -1
-  const endMonthIdx =
-    selectedMonthIdx >= 0 ? selectedMonthIdx : new Date().getMonth() // 0-11
-  const quarterStartIdx = Math.floor(endMonthIdx / 3) * 3
-
-  const periods =
-    timeView === 'monthly'
-      ? MONTHS
-      : timeView === 'ytd'
-        ? MONTHS.slice(0, endMonthIdx + 1)
-        : MONTHS.slice(quarterStartIdx, endMonthIdx + 1)
+  let periods: string[]
+  if (timeView === 'monthly') {
+    periods = MONTHS
+  } else {
+    periods = getMonthRange(filters, timeView)
+    if (!periods.length) return []
+  }
 
   const results = await Promise.all(
     periods.map(async (month) => {
-      const row = await getSalesValueTarget(
+      const row = await _fetchSVTSingleMonth(
         valueMeasure,
         targetMeasure,
-        { ...filters, month },
-        'monthly',
+        filters,
+        month,
       )
       const value = Number(row?.value_sales ?? 0)
       const target = Number(row?.target_sales ?? 0)

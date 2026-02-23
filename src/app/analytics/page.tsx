@@ -1,7 +1,6 @@
 'use client'
 
 import { useMemo, useReducer } from 'react'
-import dynamic from 'next/dynamic'
 import { useUrlState } from '@/src/hooks/useUrlState'
 import useSWR from 'swr'
 import AnalyticsFilterBar from './components/AnalyticsFilterBar'
@@ -20,9 +19,6 @@ import {
 // ---------------------------------------------------------------------------
 // Constants & URL state helpers
 // ---------------------------------------------------------------------------
-const ChatBox = dynamic(() => import('./components/ChatBox'), {
-  ssr: false,
-})
 
 const ALL_OPTION = 'All'
 const BLANK = 'blank'
@@ -397,9 +393,6 @@ export default function AnalyticsDashboard() {
           />
         </div>
       </section>
-
-      {/* ---- Chat assistant (floating) ---- */}
-      <ChatBox />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 // src/data/analytics.ts
 
 export const ANALYTICS_MONTHS = [
+  'BLANK',
   'JAN',
   'FEB',
   'MAR',

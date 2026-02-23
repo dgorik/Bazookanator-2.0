@@ -23,18 +23,19 @@ import {
 const ChatBox = dynamic(() => import('./components/ChatBox'), {
   ssr: false,
 })
+
 const ALL_OPTION = 'All'
 const BLANK = 'blank'
-const CURRENT_MONTH_INDEX = new Date().getMonth()
-const CURRENT_QUARTER_START_INDEX = Math.floor(CURRENT_MONTH_INDEX / 3) * 3
+const CURRENT_MONTH_INDEX = 'blank'
+const CURRENT_QUARTER_START_INDEX = 'blank'
 
 const initialFilters = {
-  month: ALL_OPTION,
-  qtdStartMonth: ANALYTICS_MONTHS[CURRENT_QUARTER_START_INDEX],
-  qtdEndMonth: ANALYTICS_MONTHS[CURRENT_MONTH_INDEX],
-  division: ALL_OPTION,
-  valueMeasure: '2025 Plan V4',
-  targetMeasure: '2024 Actuals V2',
+  month: BLANK,
+  qtdStartMonth: CURRENT_QUARTER_START_INDEX,
+  qtdEndMonth: CURRENT_MONTH_INDEX,
+  division: BLANK,
+  valueMeasure: BLANK,
+  targetMeasure: BLANK,
   timeView: 'total' as TimeView,
 }
 
@@ -96,11 +97,11 @@ const deserializeFilters = (value: string): FiltersState => {
   }
 } //here we are converting URl back into original value
 
-const normalizeOption = (value: string) =>
-  value !== ALL_OPTION ? value : undefined
-
 const withAllOption = (options?: string[]) =>
-  !options?.length ? [ALL_OPTION] : [ALL_OPTION, ...options.filter(Boolean)]
+  !options?.length ? [ALL_OPTION] : [ALL_OPTION, ...options.filter(Boolean)] //adding ALL to an array of options
+
+const normalizeOption = (value: string) =>
+  value !== 'All' && value !== BLANK ? value : undefined
 
 const getMonthIndex = (month?: string) =>
   month ? ANALYTICS_MONTHS.indexOf(month) : -1
@@ -237,6 +238,21 @@ export default function AnalyticsDashboard() {
   const targetMeasure =
     filters.targetMeasure !== BLANK ? filters.targetMeasure : undefined
 
+  const hasTimeSelection = useMemo(() => {
+    if (filters.timeView === 'total') return true
+    if (filters.timeView === 'monthly' || filters.timeView === 'ytd')
+      return filters.month !== BLANK
+    if (filters.timeView === 'qtd')
+      return filters.qtdStartMonth !== BLANK && filters.qtdEndMonth !== BLANK
+    return false
+  }, [
+    filters.timeView,
+    filters.month,
+    filters.qtdStartMonth,
+    filters.qtdEndMonth,
+  ])
+
+  const canFetch = Boolean(valueMeasure && targetMeasure && hasTimeSelection)
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
@@ -256,7 +272,15 @@ export default function AnalyticsDashboard() {
           </div>
           <TimeViewTabs
             selectedView={filters.timeView}
-            onViewChange={(view) => updateFilter('timeView', view)}
+            onViewChange={(view) =>
+              setFilter((prev) => ({
+                ...prev,
+                timeView: view,
+                month: initialFilters.month,
+                qtdStartMonth: initialFilters.qtdStartMonth,
+                qtdEndMonth: initialFilters.qtdEndMonth,
+              }))
+            }
           />
         </div>
 
@@ -287,14 +311,14 @@ export default function AnalyticsDashboard() {
             {
               label: 'Month',
               value: filters.month,
-              options: withAllOption(ANALYTICS_MONTHS),
+              options: ANALYTICS_MONTHS,
               onChange: (val) => updateFilter('month', val),
               showOnTabs: ['monthly'],
             },
             {
               label: 'Through Month',
               value: filters.month,
-              options: withAllOption(ANALYTICS_MONTHS),
+              options: ANALYTICS_MONTHS,
               onChange: (val) => updateFilter('month', val),
               showOnTabs: ['ytd'],
             },
@@ -329,6 +353,7 @@ export default function AnalyticsDashboard() {
           targetMeasure={targetMeasure}
           filters={normalizedFilters}
           timeView={filters.timeView}
+          canFetch={canFetch}
         />
 
         {/* ---- Drill chips ---- */}

@@ -17,6 +17,7 @@ interface HeadlineKPIProps {
   filters: Omit<SalesFilters, 'measure'>
   timeView: TimeView
   className?: string
+  canFetch: boolean
 }
 
 function getTimeViewLabel(timeView: TimeView): string {
@@ -65,7 +66,7 @@ function MiniKPI({ title, value, accent = 'neutral' }: MiniKPIProps) {
   )
 }
 
-function MiniKPIEmpty() {
+function MiniKPILoading() {
   return (
     <Card className="w-full border-gray-200 dark:border-gray-800">
       <CardContent>
@@ -86,12 +87,11 @@ export default function HeadlineKPI({
   targetMeasure,
   filters,
   timeView,
+  canFetch,
   className,
 }: HeadlineKPIProps) {
-  const hasMeasures = Boolean(valueMeasure && targetMeasure)
-
-  const { data: row } = useSWR(
-    hasMeasures
+  const { data: row, isLoading } = useSWR(
+    canFetch
       ? ['headline-kpi', valueMeasure, targetMeasure, filters, timeView]
       : null,
     () =>
@@ -116,7 +116,7 @@ export default function HeadlineKPI({
   const timeLabel = getTimeViewLabel(timeView)
 
   // Empty state — show 4 placeholder cards
-  if (!hasMeasures || !metrics) {
+  if (!canFetch || !metrics) {
     return (
       <div
         className={cn(
@@ -124,10 +124,26 @@ export default function HeadlineKPI({
           className,
         )}
       >
-        <MiniKPIEmpty />
-        <MiniKPIEmpty />
-        <MiniKPIEmpty />
-        <MiniKPIEmpty />
+        <MiniKPI title={`${timeLabel} Value`} value="$0" />
+        <MiniKPI title={`${timeLabel} Target`} value="$0" />
+        <MiniKPI title="Variance $" value="$0.0" accent="positive" />
+        <MiniKPI title="Variance %" value="+0%" accent="positive" />
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div
+        className={cn(
+          'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4',
+          className,
+        )}
+      >
+        <MiniKPILoading />
+        <MiniKPILoading />
+        <MiniKPILoading />
+        <MiniKPILoading />
       </div>
     )
   }
@@ -146,7 +162,7 @@ export default function HeadlineKPI({
         title={`${timeLabel} Value`}
         value={formatters.compactCurrency({
           number: metrics.value,
-          maxFractionDigits: 1,
+          maxFractionDigits: 0,
         })}
       />
 
@@ -155,7 +171,7 @@ export default function HeadlineKPI({
         title={`${timeLabel} Target`}
         value={formatters.compactCurrency({
           number: metrics.target,
-          maxFractionDigits: 1,
+          maxFractionDigits: 0,
         })}
       />
 
@@ -164,7 +180,7 @@ export default function HeadlineKPI({
         title="Variance $"
         value={formatters.compactCurrency({
           number: metrics.variance,
-          maxFractionDigits: 1,
+          maxFractionDigits: 0,
         })}
         accent={isPositive ? 'positive' : 'negative'}
       />
@@ -172,7 +188,7 @@ export default function HeadlineKPI({
       {/* Card 4: Percentage Difference */}
       <MiniKPI
         title="Variance %"
-        value={`${metrics.variancePct >= 0 ? '+' : ''}${metrics.variancePct.toFixed(1)}%`}
+        value={`${metrics.variancePct >= 0 ? '+' : ''}${metrics.variancePct.toFixed(0)}%`}
         accent={isPositive ? 'positive' : 'negative'}
       />
     </div>

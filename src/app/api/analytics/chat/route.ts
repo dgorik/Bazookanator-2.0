@@ -117,7 +117,7 @@ import { test } from '@/src/lib/openai/generateSummary'
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { question?: string }
+    const body = await request.json()
     const res = await test(body?.question ?? '')
     return NextResponse.json({ summary: res })
   } catch {

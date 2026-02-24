@@ -47,6 +47,8 @@ export default function ChatPanel() {
       sender: 'user',
     }
 
+    const newMessages = [...messages, userMessage]
+
     setMessages((prev) => [...prev, userMessage])
     setInputValue('')
     setIsLoading(true)
@@ -55,7 +57,7 @@ export default function ChatPanel() {
       const response = await fetch('/api/analytics/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userQuestion: inputValue }),
+        body: JSON.stringify({ userQuestion: newMessages }),
       })
 
       const data = await response.json()

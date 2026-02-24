@@ -166,7 +166,7 @@ export default function TopDivSubCard({
             </p>
           </div>
         ) : !hasMeasures ? (
-          <div className="flex h-48 items-center justify-center">
+          <div className="flex h-80 items-center justify-center">
             <p className="text-sm text-gray-400 dark:text-gray-500">
               Select measures to view data
             </p>

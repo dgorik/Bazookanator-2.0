@@ -30,8 +30,8 @@ const initialFilters = {
   qtdStartMonth: CURRENT_QUARTER_START_INDEX,
   qtdEndMonth: CURRENT_MONTH_INDEX,
   division: BLANK,
-  valueMeasure: BLANK,
-  targetMeasure: BLANK,
+  valueMeasure: '2024 Actuals V2',
+  targetMeasure: '2026 Plan V1 ',
   timeView: 'total' as TimeView,
 }
 

@@ -31,8 +31,8 @@ export function useChatPanel() {
 export function ChatPanelProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(true)
 
-  const open = useCallback(() => setIsOpen(false), [])
-  const close = useCallback(() => setIsOpen(true), [])
+  const open = useCallback(() => setIsOpen(true), [])
+  const close = useCallback(() => setIsOpen(false), [])
   const toggle = useCallback(() => setIsOpen((prev) => !prev), [])
 
   const value = useMemo<ChatPanelContextProps>(

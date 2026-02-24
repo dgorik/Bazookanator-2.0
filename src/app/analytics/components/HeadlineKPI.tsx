@@ -162,7 +162,7 @@ export default function HeadlineKPI({
         title={`${timeLabel} Value`}
         value={formatters.compactCurrency({
           number: metrics.value,
-          maxFractionDigits: 0,
+          maxFractionDigits: 1,
         })}
       />
 
@@ -171,7 +171,7 @@ export default function HeadlineKPI({
         title={`${timeLabel} Target`}
         value={formatters.compactCurrency({
           number: metrics.target,
-          maxFractionDigits: 0,
+          maxFractionDigits: 1,
         })}
       />
 
@@ -180,7 +180,7 @@ export default function HeadlineKPI({
         title="Variance $"
         value={formatters.compactCurrency({
           number: metrics.variance,
-          maxFractionDigits: 0,
+          maxFractionDigits: 1,
         })}
         accent={isPositive ? 'positive' : 'negative'}
       />
@@ -188,7 +188,7 @@ export default function HeadlineKPI({
       {/* Card 4: Percentage Difference */}
       <MiniKPI
         title="Variance %"
-        value={`${metrics.variancePct >= 0 ? '+' : ''}${metrics.variancePct.toFixed(0)}%`}
+        value={`${metrics.variancePct >= 0 ? '+' : ''}${metrics.variancePct.toFixed(1)}%`}
         accent={isPositive ? 'positive' : 'negative'}
       />
     </div>

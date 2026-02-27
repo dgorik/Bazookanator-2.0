@@ -16,7 +16,7 @@ const fakeApiCall = (
   return new Promise((resolve, reject) => {
     const random = Math.random()
     if (random > 0.5) {
-      const timeout = setTimeout(
+      const timeoutId = setTimeout(
         () => {
           const db = [
             'Apple',
@@ -36,8 +36,8 @@ const fakeApiCall = (
       ) // Random delay between 200-700ms
 
       // Support aborting the fetch
-      signal?.addEventListener('abort', () => {
-        clearTimeout(timeout)
+      signal.addEventListener('abort', () => {
+        clearTimeout(timeoutId)
         reject(new DOMException('Aborted', 'AbortError'))
       })
     } else {
@@ -72,13 +72,16 @@ export default function Test() {
       setError(null)
       return
     }
+
+    const abortController = new AbortController()
+    const signal = abortController.signal
+
     const handleResponse = async () => {
       setError(null)
       setData([])
 
-      const abortController = new AbortController()
       try {
-        const res = await fakeApiCall(debouncedQuery, abortController.signal)
+        const res = await fakeApiCall(debouncedQuery, signal)
         if (!(res instanceof Error)) {
           setData(res)
         }
@@ -89,6 +92,8 @@ export default function Test() {
       }
     }
     handleResponse()
+
+    return () => abortController.abort() //this one runs when a user navigates away, dependencies change, component is destroyed
   }, [debouncedQuery])
 
   return (

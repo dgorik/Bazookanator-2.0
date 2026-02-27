@@ -19,7 +19,7 @@ export default function ChatPanel() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: 'How can I help you?',
+      content: 'How can I help you, JEN JEN LUIS?',
       sender: 'bot',
     },
   ])

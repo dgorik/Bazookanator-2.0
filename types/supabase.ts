@@ -259,6 +259,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      execute_sql_readonly: { Args: { sql_query: string }; Returns: Json }
       get_filter_options: { Args: { column_name: string }; Returns: string[] }
       get_filtered_brands: {
         Args: {

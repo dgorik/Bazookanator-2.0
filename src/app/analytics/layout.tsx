@@ -19,7 +19,9 @@ export default async function MemberLayout({
       <SessionTimer />
       <ChatPanelProvider>
         <header className="flex items-center justify-between border-b px-4 py-2">
-          <h1 className="text-lg font-semibold">Bazookanator</h1>
+          <span className=" text-lg text-transparent px-2 bg-gradient-to-r from-[#D247BF] to-primary bg-clip-text">
+            Bazookanator
+          </span>
           <div className="flex items-center gap-2">
             <ChatToggleButton />
             <UserMenu user={user} />

@@ -26,6 +26,7 @@ export default function ChatPanel() {
 
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [isAnalystMode, setIsAnalystMode] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -57,7 +58,10 @@ export default function ChatPanel() {
       const response = await fetch('/api/analytics/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userQuestion: newMessages }),
+        body: JSON.stringify({
+          conversation: newMessages,
+          analystMode: isAnalystMode,
+        }),
       })
 
       const data = await response.json()
@@ -116,6 +120,18 @@ export default function ChatPanel() {
       </div>
 
       <div className="border-t p-3">
+        <div className="mb-2 flex items-center justify-between text-xs text-gray-600">
+          <span>Analyst mode (forces SQL)</span>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={isAnalystMode}
+              onChange={(e) => setIsAnalystMode(e.target.checked)}
+              className="h-4 w-4"
+            />
+            <span>{isAnalystMode ? 'On' : 'Off'}</span>
+          </label>
+        </div>
         <form onSubmit={handleSend} className="flex w-full gap-2">
           <Input
             placeholder="Type a message..."

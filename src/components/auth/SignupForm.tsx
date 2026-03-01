@@ -27,6 +27,7 @@ export default function SignupForm({
   const [isPending, startTransition] = useTransition()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
 
@@ -36,6 +37,7 @@ export default function SignupForm({
     const result = signupSchema.safeParse({
       email,
       password,
+      confirmPassword,
       firstName,
       lastName,
     })
@@ -60,6 +62,7 @@ export default function SignupForm({
         })
         setEmail('')
         setPassword('')
+        setConfirmPassword('')
         setFirstName('')
         setLastName('')
       } catch (err: unknown) {
@@ -122,6 +125,16 @@ export default function SignupForm({
                 value={password}
                 required
                 onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Confirm Password</Label>
+              <Input
+                id="confirm_password"
+                type="password"
+                value={confirmPassword}
+                required
+                onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
             <Button type="submit" className="w-full" disabled={isPending}>

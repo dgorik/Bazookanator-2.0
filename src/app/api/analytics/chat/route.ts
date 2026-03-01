@@ -1,129 +1,127 @@
 import { NextResponse } from 'next/server'
-import { test } from '@/src/lib/openai/generateSummary'
+import {
+  bazookanatorSalesGraph,
+  type ConversationMessage,
+} from '@/src/lib/langgraph/bazookanatorGraph'
 
-// import { createClient } from '@/src/lib/client/supabase/server'
-// import { generateSQL } from '@/src/lib/openai/generateSQL'
-// import { generateSummary } from '@/src/lib/openai/generateSummary'
-// import { buildSQLPrompt } from '@/src/lib/openai/promptBuilder'
+type SanitizedMessage = Pick<ConversationMessage, 'sender' | 'content'>
 
-// const MAX_ROWS = 100
-// const ALLOWED_TABLES = ['OP Database']
+function extractConversation(raw: unknown, fallbackQuestion?: string) {
+  const parsed =
+    Array.isArray(raw) &&
+    raw
+      .map((item) => {
+        const sender =
+          item &&
+          typeof item === 'object' &&
+          'sender' in item &&
+          (item as { sender?: unknown }).sender
+        const content =
+          item &&
+          typeof item === 'object' &&
+          'content' in item &&
+          (item as { content?: unknown }).content
 
-// const SELECT_ONLY_REGEX = /^\s*select\s/i
-// const SEMICOLON_REGEX = /;/
-// const LIMIT_REGEX = /\blimit\s+(\d+)\b/i
-// const TABLE_REGEX = /\b(from|join)\s+([^\s,]+)/gi
+        if (
+          (sender === 'user' || sender === 'bot') &&
+          typeof content === 'string'
+        ) {
+          return { sender, content: content.trim() } satisfies SanitizedMessage
+        }
+        return null
+      })
+      .filter(Boolean)
 
-// function normalizeTableName(rawTable: string) {
-//   const withoutQuotes = rawTable.replace(/"/g, '').trim()
-//   const parts = withoutQuotes.split('.')
-//   return parts[parts.length - 1] ?? withoutQuotes
-// }
+  if (parsed && parsed.length > 0) return parsed as SanitizedMessage[]
 
-// function extractTables(sql: string) {
-//   const tables = new Set<string>()
-//   for (const match of sql.matchAll(TABLE_REGEX)) {
-//     const tableToken = match[2]
-//     if (!tableToken) continue
-//     tables.add(normalizeTableName(tableToken))
-//   }
-//   return Array.from(tables)
-// }
+  if (fallbackQuestion?.trim()) {
+    return [{ sender: 'user', content: fallbackQuestion.trim() }] as const
+  }
 
-// function hasOnlyAllowedTables(sql: string) {
-//   const tables = extractTables(sql)
-//   if (tables.length === 0) return true
-//   return tables.every((table) => ALLOWED_TABLES.includes(table))
-// }
+  return []
+}
 
-// function enforceLimit(sql: string, maxRows: number) {
-//   const limitMatch = sql.match(LIMIT_REGEX)
-//   if (!limitMatch) {
-//     return `${sql} LIMIT ${maxRows}`
-//   }
+const buildRowsSummary = (
+  rows: Record<string, unknown>[],
+  sql?: string,
+): string => {
+  if (!rows || rows.length === 0) {
+    return 'No results found for that query.'
+  }
 
-//   const currentLimit = Number(limitMatch[1])
-//   if (!Number.isNaN(currentLimit) && currentLimit > maxRows) {
-//     return sql.replace(LIMIT_REGEX, `LIMIT ${maxRows}`)
-//   }
+  const count = rows.length
+  const first = rows[0]
+  const preview = Object.entries(first)
+    .slice(0, 3)
+    .map(([key, value]) => `${key}: ${value}`)
+    .join(', ')
 
-//   return sql
-// }
-
-// function validateSQL(sql: string) {
-//   if (!SELECT_ONLY_REGEX.test(sql)) {
-//     return 'Only SELECT queries are allowed.'
-//   }
-//   if (SEMICOLON_REGEX.test(sql)) {
-//     return 'Semicolons are not allowed in the SQL.'
-//   }
-//   if (!hasOnlyAllowedTables(sql)) {
-//     return 'SQL references tables outside the allowlist.'
-//   }
-//   return null
-// }
-
-// export async function POST(request: Request) {
-//   try {
-//     const body = (await request.json()) as { question?: string }
-//     const question = body?.question?.trim()
-
-//     if (!question) {
-//       return NextResponse.json(
-//         { error: 'Missing question.' },
-//         { status: 400 }
-//       )
-//     }
-
-//     const prompt = buildSQLPrompt(question)
-//     const generatedSQL = await generateSQL(prompt)
-//     const validationError = validateSQL(generatedSQL)
-
-//     if (validationError) {
-//       return NextResponse.json({ error: validationError }, { status: 400 })
-//     }
-
-//     const safeSQL = enforceLimit(generatedSQL, MAX_ROWS)
-//     const supabase = await createClient()
-//     const { data, error } = await supabase.rpc('execute_sql_readonly', {
-//       sql_query: safeSQL,
-//     })
-
-//     if (error) {
-//       return NextResponse.json(
-//         { error: 'Failed to execute query.' },
-//         { status: 500 }
-//       )
-//     }
-
-//     const rows = Array.isArray(data) ? data : []
-//     const summary =
-//       rows.length === 0
-//         ? 'No results found for that query.'
-//         : await generateSummary(rows)
-
-//     return NextResponse.json({
-//       sql: safeSQL,
-//       summary,
-//       rows,
-//     })
-//   } catch {
-//     return NextResponse.json(
-//       { error: 'Unexpected error while processing the request.' },
-//       { status: 500 }
-//     )
-//   }
-// }
+  const base = `Found ${count} row${count === 1 ? '' : 's'}. Sample -> ${preview}`
+  return sql ? `${base} | SQL: ${sql}` : base
+}
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const res = await test(body?.question ?? '')
-    return NextResponse.json({ summary: res })
-  } catch {
-    return NextResponse.json(
-      { error: 'Unexpected error while processing the request.' },
-      { status: 500 },
+    const conversation = extractConversation(body?.conversation, body?.question)
+    const analystMode =
+      typeof body?.analystMode === 'boolean'
+        ? body.analystMode
+        : Boolean(body?.forceSql)
+    const mutableConversation: ConversationMessage[] = conversation.map(
+      (msg) => ({
+        sender: msg.sender,
+        content: msg.content,
+      }),
     )
+
+    if (!conversation.length) {
+      return NextResponse.json(
+        { error: 'Missing question from the request.' },
+        { status: 400 },
+      )
+    }
+
+    const hasPerplexityKey = Boolean(process.env.PERPLEXITY_API_KEY)
+    if (!hasPerplexityKey) {
+      return NextResponse.json(
+        {
+          error:
+            'Missing PERPLEXITY_API_KEY. Add it to the environment to enable chat responses.',
+        },
+        { status: 500 },
+      )
+    }
+
+    const graphState = await bazookanatorSalesGraph.invoke({
+      messages: mutableConversation,
+      forceSql: analystMode,
+    })
+
+    if (graphState.queryError) {
+      return NextResponse.json(
+        { error: graphState.queryError },
+        { status: 400 },
+      )
+    }
+
+    const latestBotMessage = [...graphState.messages]
+      .reverse()
+      .find((msg) => msg.sender === 'bot')
+    const summary =
+      latestBotMessage?.content ||
+      buildRowsSummary(graphState.queryResults, graphState.generatedSQL)
+
+    return NextResponse.json({
+      summary,
+      sql: graphState.generatedSQL,
+      rows: graphState.queryResults,
+    })
+  } catch (error) {
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : 'Unexpected error while processing the request.'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

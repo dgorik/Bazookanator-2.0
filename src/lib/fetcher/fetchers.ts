@@ -50,7 +50,6 @@ export const getFilterOptions = async (columnName: string) => {
     column_name: columnName,
   })
   if (error) throw error
-  console.log(data)
   return data || []
 }
 

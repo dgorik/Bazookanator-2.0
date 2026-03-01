@@ -1,58 +1,28 @@
 export const salesSchema = `
-Table: OP Database
+Table: public.product_data
+Description: Each row captures a SKU-level record in the product_data table, including launch metadata, organizational context, and a single month/month-like metric.
 
 Columns:
-- measure (text)
-- division (text)
-- district (text)
-- sku (text)
-- jan (numeric)
-- feb (numeric)
-- mar (numeric)
-- apr (numeric)
-- may (numeric)
-- jun (numeric)
-- jul (numeric)
-- aug (numeric)
-- sep (numeric)
-- oct (numeric)
-- nov (numeric)
-- dec (numeric)
-- total_sales (numeric)
-- qtr_1_sales (numeric)
-- qtr_2_sales (numeric)
-- qtr_3_sales (numeric)
-- qtr_4_sales (numeric)
-- ytd_sales (numeric)
-- brand (text)
-- sub_brand (text)
-- category (text)
-- div_sub (text)
-- main_sku (text)
-- item_description (text)
-- list_price (numeric)
-- jan_cases (numeric)
-- feb_cases (numeric)
-- mar_cases (numeric)
-- apr_cases (numeric)
-- may_cases (numeric)
-- jun_cases (numeric)
-- july_cases (numeric)
-- aug_cases (numeric)
-- sept_cases (numeric)
-- oct_cases (numeric)
-- nov_cases (numeric)
-- dec_cases (numeric)
-- total_cases (numeric)
-- q1_cases (numeric)
-- q2_cases (numeric)
-- q3_cases (numeric)
-- q4_cases (numeric)
-- ytd_cases (numeric)
-- qtd_sales (numeric)
-- product_category (text)
-- location (text)
-- coa_code (text)
-- oracle_category (text)
-- year (integer)
-`;
+- id (uuid): Primary key generated through gen_random_uuid().
+- created_at (timestamptz): Record creation timestamp, defaults to now().
+- measure (text): Metric type describing the scenario that produced the row. Values containing “Board” are the official forecasts (actuals plus forecast presented to the board), “Plan” rows are financial plans, “Sales Plan” rows are sales-specific plans made by sales people, “Actuals” rows are real sales, and “LE” rows combine actuals with the Demantra forecast; nulls mean the scenario is uncategorized.
+- division (text): Organizational division (Brick & Mortar and Ecommerce).
+- district (text): Sales district tied to the division.
+- sku (text): Stock keeping unit code (see idx_product_data_sku for quick lookups).
+- brand, sub_brand, category, div_sub (text): Taxonomic dimensions used for hierarchies and roll-ups.
+- main_sku (text) and item_description (text): Internal identifier and human-friendly label for the SKU.
+- product_category_old (text): Legacy category field retained for historical comparability.
+- location, coa_code, oracle_category (text): Operational attributes for where the product was sold and how it maps to enterprise systems.
+- year, launch_year (integer): Calendar year for the record and the SKU's launch year.
+- innovation_vs_legacy (text): Segment flag that marks innovation versus legacy portfolios.
+- month (text): Month indicator stored with normalized abbreviations (JAN—DEC); null means the row does not tie to a single month.
+- sales (numeric): Numeric amount tied to the selected measure.
+
+Indexes:
+- idx_product_data_sku (btree on sku): supports frequent SKU filters.
+- idx_product_data_brand (btree on brand): speeds up brand-based roll-ups.
+
+Notes:
+- 'measure' plus 'sales' tells you whether the row is dollars or units, while 'innovation_vs_legacy' and 'division' help segments.
+- Use indexed columns ('sku', 'brand') in WHERE clauses to keep queries performant.
+`

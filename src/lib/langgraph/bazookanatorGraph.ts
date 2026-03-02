@@ -57,15 +57,19 @@ export const salesGraphState = Annotation.Root({
     default: () => [],
   }),
   forceSql: Annotation<boolean>({
+    value: (_, update) => update,
     default: () => false,
   }),
   generatedSQL: Annotation<string>({
+    value: (_, update) => update,
     default: () => '',
   }),
   queryResults: Annotation<Record<string, unknown>[]>({
+    value: (_, update) => update,
     default: () => [],
   }),
   queryError: Annotation<string>({
+    value: (_, update) => update,
     default: () => '',
   }),
 })
@@ -154,21 +158,25 @@ const chatNode: GraphNode<typeof salesGraphState> = async (state) => {
       'I did not catch that. Can you rephrase?'
 
     return {
-      messages: {
-        id: randomUUID(),
-        sender: 'bot',
-        content: reply,
-      },
+      messages: [
+        {
+          id: randomUUID(),
+          sender: 'bot',
+          content: reply,
+        },
+      ],
     }
   } catch (error) {
     console.error('Chat node error', error)
     return {
-      messages: {
-        id: randomUUID(),
-        sender: 'bot',
-        content:
-          'Something went wrong while generating a response. Please try again.',
-      },
+      messages: [
+        {
+          id: randomUUID(),
+          sender: 'bot',
+          content:
+            'Something went wrong while generating a response. Please try again.',
+        },
+      ],
     }
   }
 }
@@ -216,7 +224,6 @@ const executeSqlNode: GraphNode<typeof salesGraphState> = async (state) => {
 
   // Avoid double LIMIT enforcement; RPC already applies a hard limit.
   const supabase = createSupabaseClient(supabaseUrl, serviceRoleKey)
-  console.log(sql)
   const { data, error } = await supabase.rpc('execute_sql_readonly', {
     sql_query: sql,
   })
@@ -241,11 +248,13 @@ const summarizeNode: GraphNode<typeof salesGraphState> = async (state) => {
 
   if (!rows.length) {
     return {
-      messages: {
-        id: randomUUID(),
-        sender: 'bot',
-        content: 'No results found for that question in the sales data.',
-      },
+      messages: [
+        {
+          id: randomUUID(),
+          sender: 'bot',
+          content: 'No results found for that question in the sales data.',
+        },
+      ],
     }
   }
 
@@ -260,11 +269,13 @@ const summarizeNode: GraphNode<typeof salesGraphState> = async (state) => {
           }, but could not generate a detailed summary.`
 
     return {
-      messages: {
-        id: randomUUID(),
-        sender: 'bot',
-        content,
-      },
+      messages: [
+        {
+          id: randomUUID(),
+          sender: 'bot',
+          content,
+        },
+      ],
     }
   } catch (error) {
     console.error('Failed to summarize SQL results via LangGraph', error)
@@ -276,11 +287,13 @@ const summarizeNode: GraphNode<typeof salesGraphState> = async (state) => {
           }, but could not generate a detailed summary.`
 
     return {
-      messages: {
-        id: randomUUID(),
-        sender: 'bot',
-        content: fallback,
-      },
+      messages: [
+        {
+          id: randomUUID(),
+          sender: 'bot',
+          content: fallback,
+        },
+      ],
     }
   }
 }

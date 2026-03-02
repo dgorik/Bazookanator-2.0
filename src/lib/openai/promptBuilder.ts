@@ -16,8 +16,8 @@ SQL: SELECT sku, month, sales FROM public.product_data WHERE division = 'Ecommer
 3. User: "List product_category_old, launch_year, and average sales for legacy brands."
 SQL: SELECT product_category_old, launch_year, AVG(sales) AS avg_sales FROM public.product_data WHERE innovation_vs_legacy = 'legacy' GROUP BY product_category_old, launch_year ORDER BY avg_sales DESC;
 
-4. User: "Find the top five locations by sales for brand Sparkle in Q1."
-SQL: SELECT location, SUM(sales) AS sales FROM public.product_data WHERE brand = 'Sparkle' AND month IN ('Jan', 'Feb', 'Mar') GROUP BY location ORDER BY sales DESC LIMIT 5;
+4. User: "Find the top five locations by sales for brand Ring Pop in Q1."
+SQL: SELECT location, SUM(sales) AS sales FROM public.product_data WHERE brand = 'RING POP' AND month IN ('Jan', 'Feb', 'Mar') GROUP BY location ORDER BY sales DESC LIMIT 5;
 
 5. User: "Compare total sales between Brick & Mortar and Ecommerce divisions for 2023."
 SQL: SELECT division, SUM(sales) AS sales FROM public.product_data WHERE year = 2023 GROUP BY division ORDER BY sales DESC;

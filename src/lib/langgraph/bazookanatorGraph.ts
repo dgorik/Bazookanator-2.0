@@ -4,11 +4,6 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { generateSQL } from '@/src/lib/openai/generateSQL'
 import { generateSummary, test } from '@/src/lib/openai/generateSummary'
 
-// MAX_ROWS kept for reference if we reintroduce client-side limit enforcement.
-// The RPC already applies its own LIMIT, so we don't enforce here.
-// const MAX_ROWS = 100
-// Allowlist the actual Supabase tables we expose to the model.
-// normalizeTableName() strips quotes/schema, so include the base name.
 const ALLOWED_TABLES = ['product_data']
 const SELECT_ONLY_REGEX = /^\s*select\s/i
 const SEMICOLON_REGEX = /;/

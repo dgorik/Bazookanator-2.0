@@ -16,6 +16,13 @@ import { Button } from '@/src/components/ui/buttons/button'
 export default function UserMenu({ user }: { user: User }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+
+  const firstName = user.user_metadata?.first_name
+  const lastName = user.user_metadata?.last_name
+
+  const displayName =
+    [firstName, lastName].filter(Boolean).join(' ').trim() || user.email
+
   const handleClick = async () => {
     setLoading(true)
     const response = await signOut()
@@ -28,8 +35,13 @@ export default function UserMenu({ user }: { user: User }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-1">
-          {user.email}
+        <Button
+          onClick={() => console.log(user)}
+          variant="ghost"
+          size="sm"
+          className="gap-1"
+        >
+          {displayName}
           <ChevronDown className="h-4 w-4 opacity-50" />
         </Button>
       </DropdownMenuTrigger>

@@ -183,13 +183,13 @@ export default function TopDivSubCard({
           <Table>
             <TableHead>
               <TableRow className="border-y border-gray-200 dark:border-gray-800">
-                <TableHeaderCell className="whitespace-nowrap py-1.5 text-xs">
+                <TableHeaderCell className="md:whitespace-nowrap py-1.5 text-xs">
                   Div/Sub
                 </TableHeaderCell>
-                <TableHeaderCell className="whitespace-nowrap py-1.5 text-right text-xs">
+                <TableHeaderCell className="md:whitespace-nowrap py-1.5 text-right text-xs">
                   Var $
                 </TableHeaderCell>
-                <TableHeaderCell className="whitespace-nowrap py-1.5 text-right text-xs">
+                <TableHeaderCell className="md:whitespace-nowrap py-1.5 text-right text-xs">
                   Var %
                 </TableHeaderCell>
               </TableRow>
@@ -200,13 +200,13 @@ export default function TopDivSubCard({
                   key={row.group_value}
                   className="hover:bg-gray-50 dark:hover:bg-gray-900"
                 >
-                  <TableCell className="whitespace-nowrap py-2 text-xs font-medium text-gray-900 dark:text-gray-50">
+                  <TableCell className="md:whitespace-nowrap py-2 text-xs font-medium text-gray-900 dark:text-gray-50">
                     {row.group_value}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap py-2 text-right">
+                  <TableCell className="md:whitespace-nowrap py-2 text-right">
                     <VarianceCell value={row.variance_sales} />
                   </TableCell>
-                  <TableCell className="whitespace-nowrap py-2 text-right">
+                  <TableCell className="md:whitespace-nowrap py-2 text-right">
                     <VariancePctCell value={row.variance_pct} />
                   </TableCell>
                 </TableRow>

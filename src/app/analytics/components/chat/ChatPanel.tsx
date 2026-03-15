@@ -19,7 +19,8 @@ export default function ChatPanel() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: 'How can I help you, JEN JEN LUIS?',
+      content:
+        "This is an AI chat that i'm working on and fine tuning. The idea is to use it and get answers on any sales data related questions. example - compare Ring Pop sales in 2024 and 2025",
       sender: 'bot',
     },
   ])
